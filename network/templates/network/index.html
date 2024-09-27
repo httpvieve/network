@@ -1,5 +1,33 @@
 {% extends "network/layout.html" %}
-
+{% load static %}
 {% block body %}
-    TODO
+
+{% comment %} <div id="app">
+    {% verbatim %}
+    <p>{{ message }}</p>
+    <button @click="reverseMessage">Reverse Message</button>
+    {% endverbatim %}
+</div> {% endcomment %}
+
+    <form id="post_form" method="post">
+        {% csrf_token %}
+        {{ post_form }}
+        <button type="submit">Post</button>
+    </form>
+
+
+<div class="container">
+    {% for entry in page %}
+       {{entry.created_at}} {{ entry.author.username }} : {{ entry.content }} <br>
+       {% if entry.media %}
+       {{entry.media}}
+       {% endif %}
+    {% endfor %}
+</div>
+
+<div id="posts"><div>
+
+
+<script src="{% static 'network/app.js' %}"></script>
+
 {% endblock %}

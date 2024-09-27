@@ -1,14 +1,24 @@
+from datetime import time
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-
-from .models import User
-
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+from .models import *
+from .forms import *
 
 def index(request):
-    return render(request, "network/index.html")
+    
+    posts = Post.objects.all()
+    create_post(request)
+    # page = Paginator (posts, 10)
+    # current = page.get_page(request.GET.get('index'))
+    return render(request, "network/index.html", {
+        'page': posts,
+        'post_form': PostForm()
+    })
 
 
 def login_view(request):
@@ -61,3 +71,18 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+@login_required 
+def create_post (request):
+    if request.method == 'POST':
+        new_entry = Post (
+            author = request.user,
+            content = request.POST['content'],
+            media = request.POST['media']  
+        )
+        new_entry.save()
+        return HttpResponseRedirect(reverse("index"))
+    else:
+        return render(request, "network/index.html")
+
+

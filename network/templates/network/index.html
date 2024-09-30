@@ -8,26 +8,36 @@
     <button @click="reverseMessage">Reverse Message</button>
     {% endverbatim %}
 </div> {% endcomment %}
-
-    <form id="post_form" method="post">
+<div id="profile-view">
+  <p>  {{user.username}} {{followers|length }} followers. {{following|length}} following.</p>
+</div>
+<div id="compose-view">
+    <form id="create-post" method="post">
         {% csrf_token %}
         {{ post_form }}
         <button type="submit">Post</button>
     </form>
+</div>
 
 
-<div class="posts">
+<div id="posts-view">
+    <!-- Posts and pagination will be dynamically inserted here -->
+</div>
+
+{% comment %} <div id="posts-view">
+
     {% for entry in page %}
     <div class="post-entry">
-        {{entry.created_at}} <b> {{ entry.author.first_name}} </b> @{{ entry.author.username }} : {{ entry.content }} <br>
+        {{entry.created_at}} <b> {{ entry.author.first_name}} </b> @{{ entry.author.username }} : {{ entry.content }} ({{entry.likes_count}} likes)<br>
         {% if entry.media %}
         <img src="static/media{{ entry.media.url }}">
        {% endif %} 
     </div>
     {% endfor %}
 </div>
+  
 
-<nav aria-label="Page navigation example">
+
     <ul class="inline-flex -space-x-px text-sm">
         {% if page.has_previous %}
         <li>
@@ -49,11 +59,10 @@
       <li>
         <a href="?page={{page.next_page_number}}" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Next</a>
       </li>
-      
       {% endif %}
-    </ul>
-  
-  
+    </ul> {% endcomment %}
+
+
 <script src="{% static 'network/app.js' %}"></script>
 
 {% endblock %}

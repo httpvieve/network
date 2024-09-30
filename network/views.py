@@ -1,26 +1,27 @@
 from datetime import time
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from .models import *
 from .forms import *
+from django.db import IntegrityError
+from django.http import JsonResponse
 
 MAX_POSTS = 10
 
 def index(request):
-    all_posts = Post.objects.all().order_by('-created_at')
-    followed_posts = Post.objects.filter(author__in=request.user.followings.all())
-    create_post(request)
-    page = Paginator (all_posts, MAX_POSTS)
-    current = page.get_page(request.GET.get('page'))
+    # all_posts = Post.objects.all().order_by('-created_at')
+    # followed_posts = Post.objects.filter(author__in=request.user.following.all())
+
+    # create_post(request)
+    # page = Paginator (all_posts, MAX_POSTS)
+    # current = page.get_page(request.GET.get('page'))
     
     return render(request, "network/index.html", {
-        'page': current,
-        'post_form': PostForm()
     })
 
 
@@ -104,3 +105,48 @@ def create_post (request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/index.html")
+    
+def posts(request, scope):
+    
+    if scope == "all":
+        posts = Post.objects.all()
+    elif scope == "following":
+        posts = Post.objects.filter(author__in=request.user.following.all())
+    else: 
+        return HttpResponseBadRequest("Invalid scope.")
+
+    posts = posts.order_by('-created_at')
+    
+    paginator = Paginator(posts, MAX_POSTS)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'posts': page_obj,
+        'page': page_obj,
+        'scope': scope,
+    }
+    
+    return render(request, "network/posts.html", context)
+
+# def content (request, post_id):
+    
+def profile (request, user):
+    followers, following = [], []
+    all_users = User.objects.all()
+    user_profile = UserProfile.objects.get(user = user)
+    
+    for profile in all_users:
+        if user in profile.following.all():
+            followers.append(profile.user)
+        if profile in user_profile.user.following.all():
+            following.append(profile)
+
+    context = {
+        'user_profile': user_profile,
+        'followers': followers,
+        'following': following,
+    }
+    
+    return render(request, 'index.html', context)
+    

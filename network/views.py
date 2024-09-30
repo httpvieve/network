@@ -9,17 +9,33 @@ from django.contrib.auth.decorators import login_required
 from .models import *
 from .forms import *
 
+MAX_POSTS = 10
+
 def index(request):
-    
-    posts = Post.objects.all()
+    all_posts = Post.objects.all().order_by('-created_at')
+    followed_posts = Post.objects.filter(author__in=request.user.followings.all())
     create_post(request)
-    # page = Paginator (posts, 10)
-    # current = page.get_page(request.GET.get('index'))
+    page = Paginator (all_posts, MAX_POSTS)
+    current = page.get_page(request.GET.get('page'))
+    
     return render(request, "network/index.html", {
-        'page': posts,
+        'page': current,
         'post_form': PostForm()
     })
 
+
+def profile_view (request, user_id):
+    current_user = User.objects.get(pk = user_id)
+    user_profile = UserProfile.objects.get(user = current_user)
+    
+    user_posts = Post.objects.filter(author = user_profile.user).order_by('-created_at')
+    page = Paginator (user_posts, MAX_POSTS)
+    current = page.get_page(request.GET.get('page'))
+    
+    return render(request, "network/index.html", {
+        'page': current,
+    })
+    
 
 def login_view(request):
     if request.method == "POST":
@@ -48,6 +64,7 @@ def logout_view(request):
 
 def register(request):
     if request.method == "POST":
+        first_name = request.POST["first_name"]
         username = request.POST["username"]
         email = request.POST["email"]
 
@@ -62,7 +79,10 @@ def register(request):
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
+            user.first_name = first_name
             user.save()
+            profile  = UserProfile(user = user)
+            profile.save()
         except IntegrityError:
             return render(request, "network/register.html", {
                 "message": "Username already taken."
@@ -84,5 +104,3 @@ def create_post (request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/index.html")
-
-

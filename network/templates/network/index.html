@@ -2,16 +2,12 @@
 {% load static %}
 {% block body %}
 
-{% comment %} <div id="app">
-    {% verbatim %}
-    <p>{{ message }}</p>
-    <button @click="reverseMessage">Reverse Message</button>
-    {% endverbatim %}
-</div> {% endcomment %}
+
 <div id="profile-view">
   <p>  {{user.username}} {{followers|length }} followers. {{following|length}} following.</p>
 </div>
-<div id="compose-view">
+
+<div id="create-view">
     <form id="create-post" method="post">
         {% csrf_token %}
         {{ post_form }}
@@ -20,48 +16,10 @@
 </div>
 
 
-<div id="posts-view">
-    <!-- Posts and pagination will be dynamically inserted here -->
-</div>
-
-{% comment %} <div id="posts-view">
-
-    {% for entry in page %}
-    <div class="post-entry">
-        {{entry.created_at}} <b> {{ entry.author.first_name}} </b> @{{ entry.author.username }} : {{ entry.content }} ({{entry.likes_count}} likes)<br>
-        {% if entry.media %}
-        <img src="static/media{{ entry.media.url }}">
-       {% endif %} 
-    </div>
-    {% endfor %}
-</div>
-  
+<div id="posts-view"></div>
 
 
-    <ul class="inline-flex -space-x-px text-sm">
-        {% if page.has_previous %}
-        <li>
-            <a href="?page={{page.previous_page_number}}" class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Previous</a>
-        </li>
-        <li>
-            <a href="?page={{page.previous_page_number}}" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">{{page.previous_page_number}}</a>
-        </li>
-        {% endif %}
-        <li>
-            <a href="#" aria-current="page" class="flex items-center justify-center px-3 h-8 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">{{page.number}}</a>
-          </li>
-
-      {% if page.has_next %}
-      <li>
-        <a href="?page={{page.next_page_number}}"  class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">{{page.next_page_number}}</a>
-      </li> 
-
-      <li>
-        <a href="?page={{page.next_page_number}}" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Next</a>
-      </li>
-      {% endif %}
-    </ul> {% endcomment %}
-
+<div id="paginator"></div>
 
 <script src="{% static 'network/app.js' %}"></script>
 

@@ -94,7 +94,7 @@ def register(request):
         return render(request, "network/register.html")
 
 @login_required 
-def create_post (request):
+def create (request):
     if request.method == 'POST':
         new_entry = Post (
             author = request.user,
@@ -106,42 +106,29 @@ def create_post (request):
     else:
         return render(request, "network/index.html")
     
-def posts(request, scope):
+def posts(request, scope, page):
     
     if scope == "all":
-        posts = Post.objects.all()
-    elif scope == "following":
-        posts = Post.objects.filter(author__in=request.user.following.all())
-    else: 
-        return HttpResponseBadRequest("Invalid scope.")
-
-    posts = posts.order_by('-created_at')
+        entries = Post.objects.all()
+    if scope == "following":
+        entries = Post.objects.filter(author__in=request.user.following.all())
+    posts, has_next, has_previous = paginate (entries, page)
     
-    paginator = Paginator(posts, MAX_POSTS)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'posts': page_obj,
-        'page': page_obj,
-        'scope': scope,
-    }
     
-    return render(request, "network/posts.html", context)
+    return JsonResponse ({'posts': [entry.serialize() for entry in posts], 
+                          'page_number': page, 
+                          'has_next': has_next, 
+                          'has_previous': has_previous})
 
 # def content (request, post_id):
     
 def profile (request, user):
-    followers, following = [], []
-    all_users = User.objects.all()
     user_profile = UserProfile.objects.get(user = user)
-    
-    for profile in all_users:
+    following = user_profile.user.following.all()
+    followers = []
+    for profile in User.objects.all():
         if user in profile.following.all():
             followers.append(profile.user)
-        if profile in user_profile.user.following.all():
-            following.append(profile)
-
     context = {
         'user_profile': user_profile,
         'followers': followers,
@@ -150,3 +137,12 @@ def profile (request, user):
     
     return render(request, 'index.html', context)
     
+def paginate (posts, index):
+    
+    posts = posts.order_by('-created_at').all()
+    paginator = Paginator (posts, MAX_POSTS)
+    current = paginator.page(index)
+    entries = current.object_list
+    has_next, has_previous = current.has_next(), current.has_previous()
+    
+    return entries, has_next, has_previous

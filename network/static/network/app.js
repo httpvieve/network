@@ -2,44 +2,69 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#followed-posts').addEventListener('click', () => viewPosts('following'));
     document.querySelector('#all-posts').addEventListener('click', () => viewPosts('all'));
 
-    // Initial load of all posts
     viewPosts('all');
 });
 
 function viewPosts(scope, page = 1) {
-    fetch(`/posts/${scope}?page=${page}`)
-        .then(response => response.text())
-        .then(html => {
-            const postsView = document.querySelector('#posts-view');
-            postsView.innerHTML = html;
 
-            // Update active button state
-            document.querySelector('#all-posts').classList.toggle('active', scope === 'all');
-            document.querySelector('#followed-posts').classList.toggle('active', scope === 'following');
+    document.querySelector('#profile-view').style.display = 'block';
+    document.querySelector('#create-view').style.display = 'block';
+    document.querySelector('#posts-view').style.display = 'block';
+    document.querySelector('#paginator').style.display = 'block';
 
-            // Update pagination links
-            updatePaginationLinks(scope);
+    // const container = document.querySelector (html);
+    // const scopeTitle = document.createElement('h3');
+    // scopeTitle.innerText = `${scope}`
+    // container.appendChild(scopeTitle);
+    
+    fetch (`/posts/${scope}/${page}`)
+        .then (response => response.json())
+        .then (posts => {
+            loadPosts (posts)
+            loadPage (posts, scope)
         })
-        .catch(error => {
+        .catch (error => {
             console.error('Error:', error);
         });
-
-    // Show relevant views
-    document.querySelector('#profile-view').style.display = 'block';
-    document.querySelector('#compose-view').style.display = 'block';
-    document.querySelector('#posts-view').style.display = 'block';
 }
 
-function updatePaginationLinks(scope) {
-    const links = document.querySelectorAll('#posts-view a');
-    links.forEach(link => {
-        if (link.href.includes('page=')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const url = new URL(this.href);
-                const page = url.searchParams.get('page');
-                viewPosts(scope, page);
-            });
-        }
+function loadPosts (posts) {
+
+    const container = document.querySelector ('#posts-view');
+    container.innerHTML = '';
+    posts.posts.forEach (entry  => {
+        const post = document.createElement ('div'); 
+        post.className = 'post-card';
+        post.innerHTML = `
+            <h3><b>${entry.author.first_name}<b> @${entry.author.username}</h3>
+            <small>${entry.created_at}</small>
+            <p>${entry.content}</p>
+            <p>${entry.likes_count} likes. </p><br>
+        `;
+        container.appendChild(post);
     });
+}
+
+function loadPage (posts, scope) {
+
+    const paginator = document.querySelector ('#paginator');
+    paginator.innerHTML = '';
+    
+    if (posts.has_previous) {
+        const prevButton = document.createElement ('button');
+        prevButton.textContent = 'Previous';
+        prevButton.addEventListener ('click', () => viewPosts (scope, --posts.page_number));
+        paginator.appendChild (prevButton);
+    }
+    const currentPage = document.createElement('span');
+    currentPage.textContent = `${posts.page_number}`
+    paginator.appendChild(currentPage);
+
+    if (posts.has_next) {
+        const nextButton = document.createElement ('button');
+        nextButton.textContent = 'Next';
+        nextButton.addEventListener ('click', () => viewPosts (scope, ++posts.page_number));
+        paginator.appendChild (nextButton);
+    }
+
 }

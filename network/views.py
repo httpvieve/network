@@ -122,20 +122,20 @@ def posts(request, scope, page):
 
 # def content (request, post_id):
     
-def profile (request, user):
+def profile (request, username):
+    user = User.objects.get(username = username)
     user_profile = UserProfile.objects.get(user = user)
-    following = user_profile.user.following.all()
-    followers = []
-    for profile in User.objects.all():
-        if user in profile.following.all():
-            followers.append(profile.user)
-    context = {
-        'user_profile': user_profile,
-        'followers': followers,
-        'following': following,
-    }
-    
-    return render(request, 'index.html', context)
+    user_posts = Post.objects.filter(author = user)
+    # liked_posts?
+    # following = user_profile.user.following.all()
+    # followers = []
+    # for profile in User.objects.all():
+    #     if user in profile.following.all():
+    #         followers.append(profile.user)
+    # 'following': [account.serialize() for account in following],
+    # 'followers': [account.serialize() for account in followers]}
+    return JsonResponse ({'data': user_profile.serialize(),
+                          'posts': [entry.serialize() for entry in user_posts]})
     
 def paginate (posts, index):
     

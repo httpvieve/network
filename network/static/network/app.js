@@ -1,10 +1,31 @@
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#followed-posts').addEventListener('click', () => viewPosts('following'));
     document.querySelector('#all-posts').addEventListener('click', () => viewPosts('all'));
-
+    const myProfile = document.querySelector('#my-profile');
+    document.querySelector('#my-profile').addEventListener('click', (event) => viewProfile(myProfile))
+    document.querySelector
     viewPosts('all');
 });
+function viewProfile (username) {
+    document.querySelector('#profile-view').style.display = 'block';
+    document.querySelector('#create-view').style.display = 'none';
+    document.querySelector('#posts-view').style.display = 'block';
+    document.querySelector('#paginator').style.display = 'block';
 
+    fetch (`/profile/${username}`)
+        .then (response => response.json())
+        .then (data => {
+            const container = document.querySelector('#profile-view');
+            const profile = document.createElement('div');
+            profile.innerHTML = `
+                <h2> ${data.user.first_name} (@${data.user.username})</h2>
+                <img src="${data.profile_picture || '/static/media/fish.png'}" alt="Profile Picture">
+                <p>${data.bio}</p>
+                <p>${data.following.length} followings. ${data.followers.length} followers.</p>
+            `;
+            container.appendChild(profile);
+        });
+}
 function viewPosts(scope, page = 1) {
 
     document.querySelector('#profile-view').style.display = 'block';
@@ -20,6 +41,7 @@ function viewPosts(scope, page = 1) {
     fetch (`/posts/${scope}/${page}`)
         .then (response => response.json())
         .then (posts => {
+
             loadPosts (posts)
             loadPage (posts, scope)
         })

@@ -121,21 +121,28 @@ def posts(request, scope, page):
                           'has_previous': has_previous})
 
 # def content (request, post_id):
-    
+# def profile(request, username):
+#     user = User.objects.get(username=username)
+#     user_profile = UserProfile.objects.get(user=user)
+#     user_posts = Post.objects.filter(author=user)
+
+#     return JsonResponse({
+#         'user': user.serialize(),
+#         'profile': user_profile.serialize(),
+#         'posts': [entry.serialize() for entry in user_posts],
+#         'following': user.following.count(),
+#         'followers': user.followers.count()
+#     })
+
 def profile (request, username):
     user = User.objects.get(username = username)
     user_profile = UserProfile.objects.get(user = user)
     user_posts = Post.objects.filter(author = user)
-    # liked_posts?
-    # following = user_profile.user.following.all()
-    # followers = []
-    # for profile in User.objects.all():
-    #     if user in profile.following.all():
-    #         followers.append(profile.user)
-    # 'following': [account.serialize() for account in following],
-    # 'followers': [account.serialize() for account in followers]}
-    return JsonResponse ({'data': user_profile.serialize(),
-                          'posts': [entry.serialize() for entry in user_posts]})
+
+    return JsonResponse ({'following': user.following.count(),
+                        'followers': user.followers.count(),
+                        'profile': user_profile.serialize(),
+                        'posts': [entry.serialize() for entry in user_posts]})
     
 def paginate (posts, index):
     

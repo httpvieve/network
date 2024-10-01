@@ -1,17 +1,16 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from PIL import Image
 
-def resize_image(image_path, new_width, new_height):
-    img = Image.open(image_path)
-    img.thumbnail((new_width, new_height))
-    img.save(image_path)
+# def resize_image(image_path, new_width, new_height):
+#     img = Image.open(image_path)
+#     img.thumbnail((new_width, new_height))
+#     img.save(image_path)
     
 class User (AbstractUser):
 
-        following = models.ManyToManyField('self', symmetrical=False, related_name='user_following')
+        following = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_following')
 
-        followers = models.ManyToManyField('self', symmetrical=False, related_name='user_followers')
+        followers = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_followers')
 
         def serialize(self):
             return {
@@ -23,7 +22,7 @@ class User (AbstractUser):
 class UserProfile (models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE, related_name = 'profile')
     profile_picture = models.ImageField(upload_to = 'profile_pics', blank = True, null = True)
-    bio = models.TextField(blank = True, null = True)
+    bio = models.TextField(blank = True, default ='No bio yet.')
     created_at = models.DateTimeField(auto_now_add = True)
     
     def serialize (self):

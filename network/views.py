@@ -90,32 +90,40 @@ def create_post(request):
 
 def content(request, post_id):
     
-        post = Post.objects.get(id=post_id)
-        return JsonResponse({
+    post = Post.objects.get(id=post_id)
+    return JsonResponse({
             'success': True,
             'post': post.serialize(),
             'can_edit': post.author == request.user,
-            'liked': request.user in post.likes_by.all()
+            'is_liked': request.user in post.liked_by.all(),
+            'is_following': request.user in post.author.followers.all()
         })
-
-def posts(request, scope, page):
+        
+def filter (request, scope, page):
     
     if scope == "all":
         entries = Post.objects.all()
     elif scope == "following":
         entries = Post.objects.filter(author__in=request.user.following.all())
     else: 
-        entries = Post.objects.filter(author = scope)   
+        entries = Post.objects.filter(author = User.objects.get(username = scope))  
+        
     posts, has_next, has_previous = paginate (entries, page)
+    return posts, has_next, has_previous
+
+def posts(request, scope, page):
     
-    return JsonResponse ({'posts': [entry.serialize() for entry in posts], 
-                          'page_number': page, 
-                          'has_next': has_next, 
-                          'has_previous': has_previous})
+    posts, has_next, has_previous = filter (request, scope, page)
+    
+    return JsonResponse  ({
+            'posts': [entry.serialize() for entry in posts],
+            'page_number': page,
+            'has_next': has_next,
+            'has_previous': has_previous
+        })
 
 def paginate (posts, index):
     
-
     posts = posts.order_by('-created_at').all()
     paginator = Paginator (posts, MAX_POSTS)
     current = paginator.page(index)
@@ -126,10 +134,10 @@ def paginate (posts, index):
 
 
 def profile (request, username, page):
+    
     user = User.objects.get(username = username)
     user_profile = UserProfile.objects.get(user = user)
-    entries = Post.objects.filter(author = user)
-    posts, has_next, has_previous = paginate (entries, page)
+    posts, has_next, has_previous = filter (request, username, page)
     
     return JsonResponse ({'following': user.following.count(),
                         'followers': user.followers.count(),
@@ -138,4 +146,3 @@ def profile (request, username, page):
                         'page_number': page, 
                         'has_next': has_next, 
                         'has_previous': has_previous})
-    

@@ -14,18 +14,12 @@ from django.http import JsonResponse
 MAX_POSTS = 10
 
 def index(request):
-    # all_posts = Post.objects.all().order_by('-created_at')
-    # followed_posts = Post.objects.filter(author__in=request.user.following.all())
-
-    # create_post(request)
-    # page = Paginator (all_posts, MAX_POSTS)
-    # current = page.get_page(request.GET.get('page'))
-    
     return render(request, "network/index.html", {
+    'post_form': PostForm()
     })
 
 
-def profile_view (request, user_id):
+def profile_view (request, user_id):    
     current_user = User.objects.get(pk = user_id)
     user_profile = UserProfile.objects.get(user = current_user)
     
@@ -94,18 +88,25 @@ def register(request):
         return render(request, "network/register.html")
 
 @login_required 
-def create (request):
+def create(request):
     if request.method == 'POST':
-        new_entry = Post (
-            author = request.user,
-            content = request.POST['content'],
-            media = request.POST['media']  
-        )
-        new_entry.save()
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        return render(request, "network/index.html")
-    
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_entry = form.save(commit=False)
+            new_entry.author = request.user
+            new_entry.save()
+            return JsonResponse({
+                'success': True,
+                'post': {
+                    'id': new_entry.id,
+                    'content': new_entry.content,
+                    'author': new_entry.author.username,
+                    'created_at': new_entry.created_at.isoformat()
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'error': form.errors})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 def posts(request, scope, page):
     
     if scope == "all":
@@ -119,20 +120,6 @@ def posts(request, scope, page):
                           'page_number': page, 
                           'has_next': has_next, 
                           'has_previous': has_previous})
-
-# def content (request, post_id):
-# def profile(request, username):
-#     user = User.objects.get(username=username)
-#     user_profile = UserProfile.objects.get(user=user)
-#     user_posts = Post.objects.filter(author=user)
-
-#     return JsonResponse({
-#         'user': user.serialize(),
-#         'profile': user_profile.serialize(),
-#         'posts': [entry.serialize() for entry in user_posts],
-#         'following': user.following.count(),
-#         'followers': user.followers.count()
-#     })
 
 def profile (request, username):
     user = User.objects.get(username = username)

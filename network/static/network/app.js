@@ -1,3 +1,5 @@
+var initialized = true;
+
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#followed-posts').addEventListener('click', () => viewPosts('following'));
     document.querySelector('#all-posts').addEventListener('click', () => viewPosts('all'));
@@ -10,9 +12,44 @@ document.addEventListener('DOMContentLoaded', function() {
             viewProfile(username);
         });
     });
-
+    initialized = initialized ? !initialized : createPost();
     viewPosts('all');
 });
+
+function createPost() {
+    
+    const form = document.getElementById('create-form');
+    const submitButton = document.getElementById('submit-post');
+    const contentTextarea = document.querySelector('textarea[name="content"]');
+
+    document.addEventListener('keyup', () => { submitButton.disabled = contentTextarea.value === '';});
+
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitButton.disabled = true;
+
+        const formData = new FormData(form);
+        
+        fetch('/posts/create', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                form.reset();
+                viewPosts('all');
+            } else {
+                console.error('Error creating post:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        })
+    });
+}
+
 
 function viewProfile(username) {
 
@@ -72,9 +109,9 @@ function viewPosts(scope, page = 1) {
         .catch (error => {
             console.error('Error:', error);
         });
-    }
-
 }
+
+
 
 function loadPosts (posts) {
 

@@ -10,7 +10,7 @@ urlpatterns = [
     path("register", views.register, name="register"),
     
     path("posts/<str:scope>/<int:page>", views.posts, name="posts"),
-    # path("posts/create", views.create, name="create"),
+    path("posts/create", views.create, name="create"),
     # path("posts/<int:post_id>", views.post, name="post"),
     
     path("profile/<str:username>", views.profile, name="profile"),

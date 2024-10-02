@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#all-posts').addEventListener('click', () => viewPosts('all'));
     
     const profile = document.querySelectorAll('#profile');
+        
     profile.forEach(profile => {
         profile.addEventListener('click', (event) => {
             event.preventDefault();
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
             viewProfile(username);
         });
     });
+
     initialized = initialized ? !initialized : createPost();
     viewPosts('all');
 });
@@ -23,9 +25,8 @@ function createPost() {
     const contentTextarea = document.querySelector('textarea[name="content"]');
 
     document.addEventListener('keyup', () => { submitButton.disabled = contentTextarea.value === '';});
-
-
     form.addEventListener('submit', function(e) {
+        
         e.preventDefault();
         submitButton.disabled = true;
 
@@ -44,24 +45,21 @@ function createPost() {
                 console.error('Error creating post:', data.error);
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-        })
     });
 }
 
 
-function viewProfile(username) {
+function viewProfile(username, page = 1) {
 
     document.querySelector('#profile-view').style.display = 'block';
     document.querySelector('#create-view').style.display = 'none';
     document.querySelector('#posts-view').style.display = 'block';
-    document.querySelector('#paginator').style.display = 'none';
+    document.querySelector('#paginator').style.display = 'block';
 
-    fetch(`/profile/${username}`)
+    fetch(`/profile/${encodeURIComponent(username)}/${page}`)
         .then(response => response.json())
         .then(data => {
-
+            console.log(data);
             const container = document.querySelector('#profile-view');
             container.innerHTML = ''; 
             const profile = document.createElement('div');
@@ -71,49 +69,27 @@ function viewProfile(username) {
                 <p>${data.following} following. ${data.followers } followers.</p>
             `;
             container.appendChild(profile);
-
-            // Display user's posts
-            const postsContainer = document.querySelector('#posts-view');
-            postsContainer.innerHTML = `<h3> ${data.profile.user.first_name}'s Posts</h3>`;
-            data.posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.className = 'post';
-                postElement.innerHTML = `
-                    <p>${post.content}</p>
-                    <small>Posted on ${post.created_at}</small>
-                `;
-                postsContainer.appendChild(postElement);
-            });
+            loadPosts (data.profile.user.username, data, true)
         })
-        .catch(error => {
-            console.error('Error:', error);
-        });
 }
-function viewPosts(scope, page = 1) {
 
+function viewPosts(scope, page = 1) {
     document.querySelector('#profile-view').style.display = 'none';
     document.querySelector('#create-view').style.display = 'block';
     document.querySelector('#posts-view').style.display = 'block';
     document.querySelector('#paginator').style.display = 'block';
 
-    // const container = document.querySelector (html);
-    // const scopeTitle = document.createElement('h3');
-    // scopeTitle.innerText = `${scope}`
-    // container.appendChild(scopeTitle);
-        fetch (`/posts/${scope}/${page}`)
+        fetch(`/posts/${encodeURIComponent(scope)}/${page}`)
         .then (response => response.json())
         .then (posts => {
-            loadPosts (posts)
-            loadPage (posts, scope)
+            loadPosts (scope, posts, false)
         })
         .catch (error => {
             console.error('Error:', error);
         });
 }
 
-
-
-function loadPosts (posts) {
+function loadPosts (scope, posts, isProfile) {
 
     const container = document.querySelector ('#posts-view');
     container.innerHTML = '';
@@ -121,24 +97,20 @@ function loadPosts (posts) {
         const post = document.createElement ('div'); 
         post.className = 'post-card';
         post.innerHTML = `
-            <a href="/profile/${entry.author.username}" id="profile">${entry.author.first_name} <b>${entry.author.username}</b></a>
+            <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile">${entry.author.first_name} <b>${entry.author.username}</b></a>
             <small>${entry.created_at}</small>
             <p>${entry.content}</p>
             <p>${entry.likes_count} likes. </p><br>
         `;
-        container.appendChild(post);
 
-        post.addEventListener('click', (event) => {
+        const profile = post.querySelector ('.profile-link');
+        profile.addEventListener('click', function(event) {
             event.preventDefault();
-            viewProfile(entry.author.username);
+            viewProfile(this.dataset.username);
         });
+
+        container.appendChild(post);
     });
-
-
-    
-}
-
-function loadPage (posts, scope) {
 
     const paginator = document.querySelector ('#paginator');
     paginator.innerHTML = '';
@@ -146,7 +118,14 @@ function loadPage (posts, scope) {
     if (posts.has_previous) {
         const prevButton = document.createElement ('button');
         prevButton.textContent = 'Previous';
-        prevButton.addEventListener ('click', () => viewPosts (scope, --posts.page_number));
+        prevButton.addEventListener ('click', () => {
+            if (isProfile) {
+                viewProfile(scope, posts.page_number - 1)
+            } else {
+                viewPosts (scope, posts.page_number - 1)
+            }
+        }
+    );
         paginator.appendChild (prevButton);
     }
     const currentPage = document.createElement('span');
@@ -156,8 +135,15 @@ function loadPage (posts, scope) {
     if (posts.has_next) {
         const nextButton = document.createElement ('button');
         nextButton.textContent = 'Next';
-        nextButton.addEventListener ('click', () => viewPosts (scope, ++posts.page_number));
+        nextButton.addEventListener ('click', () => {
+            if (isProfile) {
+                viewProfile(scope, posts.page_number + 1)
+            } else {
+                viewPosts (scope, posts.page_number + 1)
+            }
+        }
+    );
         paginator.appendChild (nextButton);
     }
-
+    
 }

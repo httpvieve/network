@@ -19,19 +19,6 @@ def index(request):
     })
 
 
-def profile_view (request, user_id):    
-    current_user = User.objects.get(pk = user_id)
-    user_profile = UserProfile.objects.get(user = current_user)
-    
-    user_posts = Post.objects.filter(author = user_profile.user).order_by('-created_at')
-    page = Paginator (user_posts, MAX_POSTS)
-    current = page.get_page(request.GET.get('page'))
-    
-    return render(request, "network/index.html", {
-        'page': current,
-    })
-    
-
 def login_view(request):
     if request.method == "POST":
 
@@ -88,7 +75,7 @@ def register(request):
         return render(request, "network/register.html")
 
 @login_required 
-def create(request):
+def create_post(request):
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
@@ -97,42 +84,38 @@ def create(request):
             new_entry.save()
             return JsonResponse({
                 'success': True,
-                'post': {
-                    'id': new_entry.id,
-                    'content': new_entry.content,
-                    'author': new_entry.author.username,
-                    'created_at': new_entry.created_at.isoformat()
-                }
+                'post': new_entry.serialize()
             })
-        else:
-            return JsonResponse({'success': False, 'error': form.errors})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+def content(request, post_id):
+    
+        post = Post.objects.get(id=post_id)
+        return JsonResponse({
+            'success': True,
+            'post': post.serialize(),
+            'can_edit': post.author == request.user,
+            'liked': request.user in post.likes_by.all()
+        })
+
 def posts(request, scope, page):
     
     if scope == "all":
         entries = Post.objects.all()
-    if scope == "following":
+    elif scope == "following":
         entries = Post.objects.filter(author__in=request.user.following.all())
+    else: 
+        entries = Post.objects.filter(author = scope)   
     posts, has_next, has_previous = paginate (entries, page)
-    
     
     return JsonResponse ({'posts': [entry.serialize() for entry in posts], 
                           'page_number': page, 
                           'has_next': has_next, 
                           'has_previous': has_previous})
 
-def profile (request, username):
-    user = User.objects.get(username = username)
-    user_profile = UserProfile.objects.get(user = user)
-    user_posts = Post.objects.filter(author = user)
-
-    return JsonResponse ({'following': user.following.count(),
-                        'followers': user.followers.count(),
-                        'profile': user_profile.serialize(),
-                        'posts': [entry.serialize() for entry in user_posts]})
-    
 def paginate (posts, index):
     
+
     posts = posts.order_by('-created_at').all()
     paginator = Paginator (posts, MAX_POSTS)
     current = paginator.page(index)
@@ -140,3 +123,19 @@ def paginate (posts, index):
     has_next, has_previous = current.has_next(), current.has_previous()
     
     return entries, has_next, has_previous
+
+
+def profile (request, username, page):
+    user = User.objects.get(username = username)
+    user_profile = UserProfile.objects.get(user = user)
+    entries = Post.objects.filter(author = user)
+    posts, has_next, has_previous = paginate (entries, page)
+    
+    return JsonResponse ({'following': user.following.count(),
+                        'followers': user.followers.count(),
+                        'profile': user_profile.serialize(),
+                        'posts': [entry.serialize() for entry in posts], 
+                        'page_number': page, 
+                        'has_next': has_next, 
+                        'has_previous': has_previous})
+    

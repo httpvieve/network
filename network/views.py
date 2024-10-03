@@ -10,6 +10,7 @@ from .models import *
 from .forms import *
 from django.db import IntegrityError
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 MAX_POSTS = 10
 
@@ -17,7 +18,6 @@ def index(request):
     return render(request, "network/index.html", {
     'post_form': PostForm()
     })
-
 
 def login_view(request):
     if request.method == "POST":
@@ -37,7 +37,6 @@ def login_view(request):
             })
     else:
         return render(request, "network/login.html")
-
 
 def logout_view(request):
     logout(request)
@@ -88,9 +87,30 @@ def create_post(request):
             })
 
 
+@csrf_exempt
+@login_required 
+def like_post (request, post_id):
+    if request.method == "POST":
+        post = Post.objects.get (pk=post_id)
+        # if liked -> unlike
+        if request.user in post.liked_by.all():
+            post.liked_by.remove(request.user)
+        else:
+            post.liked_by.add(request.user)
+            
+        return JsonResponse ({
+            'success': True,
+            'likes_count': post.liked_by.count(),
+            'is_liked': request.user in post.liked_by.all()
+        })
+    return JsonResponse ({'success': False})
+
+@login_required 
+
 def content(request, post_id):
     
     post = Post.objects.get(id=post_id)
+    
     return JsonResponse({
             'success': True,
             'post': post.serialize(),
@@ -98,7 +118,7 @@ def content(request, post_id):
             'is_liked': request.user in post.liked_by.all(),
             'is_following': request.user in post.author.followers.all()
         })
-        
+
 def filter (request, scope, page):
     
     if scope == "all":
@@ -111,6 +131,7 @@ def filter (request, scope, page):
     posts, has_next, has_previous = paginate (entries, page)
     return posts, has_next, has_previous
 
+@login_required 
 def posts(request, scope, page):
     
     posts, has_next, has_previous = filter (request, scope, page)
@@ -123,7 +144,6 @@ def posts(request, scope, page):
         })
 
 def paginate (posts, index):
-    
     posts = posts.order_by('-created_at').all()
     paginator = Paginator (posts, MAX_POSTS)
     current = paginator.page(index)
@@ -132,7 +152,7 @@ def paginate (posts, index):
     
     return entries, has_next, has_previous
 
-
+@login_required 
 def profile (request, username, page):
     
     user = User.objects.get(username = username)

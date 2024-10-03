@@ -1,6 +1,8 @@
+
 var initialized = true;
 
 document.addEventListener('DOMContentLoaded', function() {
+
     document.querySelector('#followed-posts').addEventListener('click', () => viewPosts('following'));
     document.querySelector('#all-posts').addEventListener('click', () => viewPosts('all'));
     
@@ -54,8 +56,27 @@ function createPost() {
         })
     });
 }
+function likePost (post_id, liked) {
 
+    fetch (`/post/${post_id}/like`,{
+        method: 'POST'
+    })
+    .then (response => response.json())
+    .then (update => {
+        if (update.success) {
+            const likeButton = document.querySelector(`.like-button[data-id="${post_id}"]`);
+            liked = update.is_liked;
+            likeButton.textContent = `${update.is_liked ? 'Unlike' : 'Like'} [${update.likes_count}like(s).]`;
+        }
+    })
+    .catch (error => console.error ('Error:', error));
+}
+
+// function followUser () {
+
+// }
 function viewContent (post_id) {
+
     document.querySelector('#content-view').style.display = 'block';
     document.querySelector('#profile-view').style.display = 'none';
     document.querySelector('#create-view').style.display = 'none';
@@ -64,15 +85,20 @@ function viewContent (post_id) {
     fetch (`/post/${post_id}`)
         .then (response => response.json())
         .then (data => {
+            console.log(data);
             const container = document.querySelector('#content-view');
             container.innerHTML = `
             <div>
-            <button id="back-to-posts" class="back-btn" >Back to Posts</button>
+            <button id="back-to-posts" class="back-btn" >Back to Posts</button><br><br>
                 <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile">${data.post.author.first_name} <b>${data.post.author.username}</b></a>
                 <small>${data.post.created_at}</small>
+                <small>can_edit: ${data.can_edit}</small>
+                <small>is_liked: ${data.is_liked}</small>
                 <p>${data.post.content} </p>
-                <b> ${data.post.likes_count} likes. </b>
-                <button class="like-button" data-post-id="${data.post.id}">${data.post.is_liked ? 'Unlike' : 'Like'}</button>
+                <b> ${data.post.likes_count} likes.</b><br><br>
+                <button class="like-button" onclick="likePost(${data.post.id}, ${data.is_liked})" data-id="${data.post.id}"> 
+                    ${data.is_liked ? 'Unlike' : 'Like'} [${data.post.likes_count} like(s).]
+                </button>
                 <button class="follow-button" data-username="${data.post.author.username}">${data.post.is_following ? 'Unfollow' : 'Follow'}</button>
             </div>
             `;
@@ -82,7 +108,6 @@ function viewContent (post_id) {
                 event.preventDefault();
                 viewProfile(this.dataset.username);
             });
-
 
             const backButton = container.querySelector('.back-btn');
             backButton.addEventListener('click', function() {

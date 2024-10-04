@@ -11,7 +11,7 @@ from .forms import *
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+import json
 MAX_POSTS = 10
 
 def index(request):
@@ -86,32 +86,13 @@ def create_post(request):
                 'post': new_entry.serialize()
             })
 
-@csrf_exempt
-@login_required 
-def follow_user (request, username):
-    if request.method == "PUT":
-        profile = User.objects.get (username = username)
-        # if followed -> unfollow
-        is_followed = profile in request.user.following.all()
-        is_follower = request.user in profile.followers.all()
-        if is_followed and is_follower:
-            profile.followers.remove(request.user)
-            request.user.following.remove(profile)
-        else:
-            profile.followers.add(request.user)
-            request.user.following.add(profile)
-        return JsonResponse ({
-            'success': True,
-            'is_following': is_followed == is_follower
-        })
-    return JsonResponse ({'success': False})
 
 @csrf_exempt
 @login_required 
 def like_post (request, post_id):
     
+    post = Post.objects.get (pk=post_id)
     if request.method == "PUT":
-        post = Post.objects.get (pk=post_id)
         # if liked -> unlike
         if request.user in post.liked_by.all():
             post.liked_by.remove(request.user)
@@ -124,6 +105,22 @@ def like_post (request, post_id):
         })
         
     return JsonResponse ({'success': False})
+@login_required 
+@csrf_exempt
+def edit_post (request, post_id):
+    if request.method == "PUT":
+        post = Post.objects.get(id=post_id)
+        data = json.loads(request.body)
+        post.content = data.get('content', post.content)
+        post.save()
+        return JsonResponse({
+            'success': True,
+            'post': post.serialize()
+        })
+
+    
+def edit_profile (request):
+    pass
 
 @csrf_exempt
 @login_required 
@@ -164,6 +161,7 @@ def posts(request, scope, page):
         })
 
 def paginate (posts, index):
+    
     posts = posts.order_by('-created_at').all()
     paginator = Paginator (posts, MAX_POSTS)
     current = paginator.page(index)
@@ -184,3 +182,25 @@ def profile (request, username, page):
                         'profile': user_profile.serialize(),
                         'posts': [entry.serialize() for entry in posts], 
                         'page_number': page, 'has_next': has_next, 'has_previous': has_previous})
+    
+    
+@csrf_exempt
+@login_required 
+def follow_user (request, username):
+    
+    profile = User.objects.get (username = username)
+    is_followed = profile in request.user.following.all()
+    is_follower = request.user in profile.followers.all()
+    
+    if request.method == "PUT":
+        if is_followed and is_follower:
+            profile.followers.remove(request.user)
+            request.user.following.remove(profile)
+        else:
+            profile.followers.add(request.user)
+            request.user.following.add(profile)
+        return JsonResponse ({
+            'success': True,
+            'is_following': is_followed == is_follower
+        })
+    return JsonResponse ({'success': False})

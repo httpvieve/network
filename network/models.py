@@ -9,7 +9,6 @@ from django.db import models
 class User (AbstractUser):
 
         following = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_following')
-
         followers = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_followers')
 
         def serialize(self):
@@ -57,7 +56,8 @@ class Post (models.Model):
             'content': self.content,
             'media': self.media.url if self.media else None,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
-            'likes_count': self.likes_count(),
+            'modified_at': self.modified_at.strftime('%Y-%m-%d %H:%M'),
+            'likes_count': self.likes_count()
         }
 
     def __str__(self):

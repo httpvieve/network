@@ -58,6 +58,7 @@ function createPost() {
         })
     });
 }
+
 function createButton(label) {
     const button = document.createElement('button');
     // button.className = className;
@@ -65,36 +66,48 @@ function createButton(label) {
     return button;
   }
 
-function likePost (post_id, is_liked) {
+function likePost (postId, isLiked) {
 
-    fetch (`/post/${post_id}/like`, {
+    fetch (`/post/${postId}/like`, {
         method: 'PUT',
         body: JSON.stringify({
-            is_liked: !is_liked
+            is_liked: !isLiked
         })
     })
-    .then(() => viewContent(post_id))
+    .then(() => viewContent(postId))
 }
-function followUser (username, is_following, post_id) {
+
+function followUser (username, isFollowing, postId) {
 
     fetch (`profile/${username}/follow`, {
         method: 'PUT',
         body: JSON.stringify({
-            is_following: !is_following
+            is_following: !isFollowing
         })
     })
-    .then(() => viewContent(post_id))
+    .then(() => viewContent(postId))
     // .then(() => viewProfile(username))
 }
 
-function viewContent (post_id) {
+function editPost(postId, updatedContent) {
+    fetch (`/post/${postId}/edit`, {
+        method: 'PUT',
+        body: JSON.stringify({
+        content: updatedContent
+        })
+    })
+    .then(() => viewContent(postId))
+};
+
+
+function viewContent (postId) {
 
     document.querySelector('#content-view').style.display = 'block';
     document.querySelector('#profile-view').style.display = 'none';
     document.querySelector('#create-view').style.display = 'none';
     document.querySelector('#posts-view').style.display = 'none';
     document.querySelector('#paginator').style.display = 'none'; 
-    fetch (`/post/${post_id}`)
+    fetch (`/post/${postId}`)
         .then (response => response.json())
         .then (data => {
             console.log(data);
@@ -104,28 +117,57 @@ function viewContent (post_id) {
             <button id="back-to-posts" class="back-btn" >Back to Posts</button><br><br>
                 <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile">${data.post.author.first_name} <b>${data.post.author.username}</b></a>
                 <small>${data.post.created_at}</small>
-                <small>can_edit: ${data.can_edit}</small>
-                <small>is_liked: ${data.is_liked}</small>
-                 <small>is_following: ${data.is_following}</small>
-                <small>follower count: ${data.post.author.followers|length}</small>
-                <p>${data.post.content} </p>
+                
+                <p id="post-content">${data.post.content} </p>
                 <b> ${data.post.likes_count} likes.</b><br><br>
-                </div>
+                <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
+
+                    <div id="edit-form" style="display: none;">
+                        <textarea id="edit-content">${data.post.content}</textarea>
+                        <button id="save-edit">Save</button>
+                        <button id="cancel-edit">Cancel</button>
+                        </div>
+            </div>
                 `;
                 
-              
+            const editButton = createButton ("Edit");
             const likeButton = createButton (data.is_liked ? "Unlike" : "Like");
+            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
+
             likeButton.addEventListener ('click', function() {
                 likePost(data.post.id, data.is_liked);
             })
-            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
-            container.append(likeButton);
 
             followButton.addEventListener ('click', function() {
                 followUser(data.post.author.username, data.is_following, data.post.id);
             })
-            container.append(followButton);
 
+            editButton.addEventListener('click', function() {
+                const editForm = document.querySelector(`#edit-form`);
+                const content = document.querySelector(`#post-content`);
+                editForm.style.display = 'block';
+                content.style.display = 'none';
+                likeButton.style.display = 'none';
+                editButton.style.display = 'none';
+            });
+            
+            const saveEdit = document.querySelector(`#save-edit`);
+            
+            saveEdit.addEventListener('click', function() {
+                const updatedContent = document.querySelector(`#edit-content`).value;
+                editPost(data.post.id, updatedContent);
+            });
+
+            const cancelEdit = document.querySelector(`#cancel-edit`);
+            cancelEdit.addEventListener('click', function() {
+                viewContent(data.post.id);
+            });
+
+            container.append(likeButton);
+            if (data.can_edit) { container.append(editButton); }
+            else { container.append(followButton); }
+
+            
             const profileLink = container.querySelector('.profile-link');
             profileLink.addEventListener('click', function(event) {
                 event.preventDefault();

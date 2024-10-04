@@ -75,6 +75,17 @@ function likePost (post_id, is_liked) {
     })
     .then(() => viewContent(post_id))
 }
+function followUser (username, is_following, post_id) {
+
+    fetch (`profile/${username}/follow`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            is_following: !is_following
+        })
+    })
+    .then(() => viewContent(post_id))
+    // .then(() => viewProfile(username))
+}
 
 function viewContent (post_id) {
 
@@ -102,16 +113,18 @@ function viewContent (post_id) {
                 </div>
                 `;
                 
-                // <button class="follow-button" data-username="${data.post.author.username}">${data.post.is_following ? 'Unfollow' : 'Follow'}</button>
-                // <button class="like-button" onclick="likePost(${data.post.id})" data-id="${data.post.id}"> 
-                //     ${data.is_liked ? 'Unlike' : 'Like'} [${data.post.likes_count} like(s).]
-                // </button>
-                
+              
             const likeButton = createButton (data.is_liked ? "Unlike" : "Like");
             likeButton.addEventListener ('click', function() {
                 likePost(data.post.id, data.is_liked);
             })
+            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
             container.append(likeButton);
+
+            followButton.addEventListener ('click', function() {
+                followUser(data.post.author.username, data.is_following, data.post.id);
+            })
+            container.append(followButton);
 
             const profileLink = container.querySelector('.profile-link');
             profileLink.addEventListener('click', function(event) {

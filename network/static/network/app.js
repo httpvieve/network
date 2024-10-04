@@ -1,5 +1,7 @@
 
-var initialized = true;
+var INITIALIZED = true;
+var DECREMENT = -1;
+var INCREMENT = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -23,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    initialized = initialized ? !initialized : createPost();
+    INITIALIZED = INITIALIZED ? !INITIALIZED : createPost();
     viewPosts('all');
 });
 
@@ -56,25 +58,24 @@ function createPost() {
         })
     });
 }
-function likePost (post_id, liked) {
+function createButton(label) {
+    const button = document.createElement('button');
+    // button.className = className;
+    button.innerHTML = `${label}`;
+    return button;
+  }
 
-    fetch (`/post/${post_id}/like`,{
-        method: 'POST'
+function likePost (post_id, is_liked) {
+
+    fetch (`/post/${post_id}/like`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            is_liked: !is_liked
+        })
     })
-    .then (response => response.json())
-    .then (update => {
-        if (update.success) {
-            const likeButton = document.querySelector(`.like-button[data-id="${post_id}"]`);
-            liked = update.is_liked;
-            likeButton.textContent = `${update.is_liked ? 'Unlike' : 'Like'} [${update.likes_count}like(s).]`;
-        }
-    })
-    .catch (error => console.error ('Error:', error));
+    .then(() => viewContent(post_id))
 }
 
-// function followUser () {
-
-// }
 function viewContent (post_id) {
 
     document.querySelector('#content-view').style.display = 'block';
@@ -94,14 +95,23 @@ function viewContent (post_id) {
                 <small>${data.post.created_at}</small>
                 <small>can_edit: ${data.can_edit}</small>
                 <small>is_liked: ${data.is_liked}</small>
+                 <small>is_following: ${data.is_following}</small>
+                <small>follower count: ${data.post.author.followers|length}</small>
                 <p>${data.post.content} </p>
                 <b> ${data.post.likes_count} likes.</b><br><br>
-                <button class="like-button" onclick="likePost(${data.post.id}, ${data.is_liked})" data-id="${data.post.id}"> 
-                    ${data.is_liked ? 'Unlike' : 'Like'} [${data.post.likes_count} like(s).]
-                </button>
-                <button class="follow-button" data-username="${data.post.author.username}">${data.post.is_following ? 'Unfollow' : 'Follow'}</button>
-            </div>
-            `;
+                </div>
+                `;
+                
+                // <button class="follow-button" data-username="${data.post.author.username}">${data.post.is_following ? 'Unfollow' : 'Follow'}</button>
+                // <button class="like-button" onclick="likePost(${data.post.id})" data-id="${data.post.id}"> 
+                //     ${data.is_liked ? 'Unlike' : 'Like'} [${data.post.likes_count} like(s).]
+                // </button>
+                
+            const likeButton = createButton (data.is_liked ? "Unlike" : "Like");
+            likeButton.addEventListener ('click', function() {
+                likePost(data.post.id, data.is_liked);
+            })
+            container.append(likeButton);
 
             const profileLink = container.querySelector('.profile-link');
             profileLink.addEventListener('click', function(event) {
@@ -135,7 +145,7 @@ function viewProfile(username, page = 1) {
                 <h2>${data.profile.user.first_name} (@${data.profile.user.username})</h2>
                 <small>Joined ${data.profile.created_at}</small>
                 <p>${data.profile.bio}</p>
-                <p>${data.following} following. ${data.followers } followers.</p>
+                <p>${data.following} following. ${data.followers} followers.</p>
             `;
             container.appendChild(profile);
             loadPosts (data.profile.user.username, data, true)
@@ -143,6 +153,7 @@ function viewProfile(username, page = 1) {
 }
 
 function viewPosts(scope, page = 1) {
+
     document.querySelector('#content-view').style.display = 'none';
     document.querySelector('#profile-view').style.display = 'none';
     document.querySelector('#create-view').style.display = 'block';
@@ -157,6 +168,7 @@ function viewPosts(scope, page = 1) {
         .catch (error => {
             console.error('Error:', error);
         });
+
 }
 
 function loadPosts (scope, posts, isProfile) {
@@ -192,35 +204,28 @@ function loadPosts (scope, posts, isProfile) {
     const paginator = document.querySelector ('#paginator');
     paginator.innerHTML = '';
     
-    if (posts.has_previous) {
-        const prevButton = document.createElement ('button');
-        prevButton.textContent = 'Previous';
-        prevButton.addEventListener ('click', () => {
-            if (isProfile) {
-                viewProfile(scope, posts.page_number - 1)
-            } else {
-                viewPosts (scope, posts.page_number - 1)
-            }
-        }
-    );
-        paginator.appendChild (prevButton);
-    }
+    paginatorButton (posts, scope, isProfile, 'Previous', DECREMENT, posts.has_previous);
+
     const currentPage = document.createElement('span');
     currentPage.textContent = `${posts.page_number}`
     paginator.appendChild(currentPage);
+    
+    paginatorButton (posts, scope, isProfile, 'Next', INCREMENT, posts.has_next);
+}
 
-    if (posts.has_next) {
-        const nextButton = document.createElement ('button');
-        nextButton.textContent = 'Next';
-        nextButton.addEventListener ('click', () => {
+function paginatorButton (posts, scope, isProfile, buttonName, buttonIndex, buttonCondition) {
+
+    if (buttonCondition) {
+        const button = document.createElement ('button');
+        button.textContent = buttonName;
+        button.addEventListener ('click', () => {
             if (isProfile) {
-                viewProfile(scope, posts.page_number + 1)
+                viewProfile(scope, posts.page_number + buttonIndex)
             } else {
-                viewPosts (scope, posts.page_number + 1)
+                viewPosts (scope, posts.page_number + buttonIndex)
             }
         }
     );
-        paginator.appendChild (nextButton);
+        paginator.appendChild (button);
     }
-    
 }

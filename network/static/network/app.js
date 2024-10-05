@@ -66,7 +66,7 @@ function createButton(label) {
     return button;
   }
 
-function likePost (postId, isLiked) {
+function likePost (postId, isLiked, windowState, key) {
 
     fetch (`/post/${postId}/like`, {
         method: 'PUT',
@@ -74,10 +74,15 @@ function likePost (postId, isLiked) {
             is_liked: !isLiked
         })
     })
-    .then(() => viewContent(postId))
+    .then(() => {
+        if (windowState == '') {}
+        if (windowState == '') {}
+        if (windowState == '') {}
+        viewContent(postId)
+    })
 }
 
-function followUser (username, isFollowing, postId) {
+function followUser (username, isFollowing, windowState, key) {
 
     fetch (`profile/${username}/follow`, {
         method: 'PUT',
@@ -85,20 +90,36 @@ function followUser (username, isFollowing, postId) {
             is_following: !isFollowing
         })
     })
-    .then(() => viewContent(postId))
-    // .then(() => viewProfile(username))
+    .then(() => {
+        if (windowState == 'post') {
+            viewContent(key)
+        } 
+        if (windowState == 'profile'){
+            viewProfile(username)
+        } 
+    })
 }
 
 function editPost(postId, updatedContent) {
-    fetch (`/post/${postId}/edit`, {
+    fetch (`/post/${postId}`, {
         method: 'PUT',
         body: JSON.stringify({
-        content: updatedContent
+            content: updatedContent
         })
     })
     .then(() => viewContent(postId))
-};
+}
 
+function editProfile (username, page, updatedContent) {
+
+    fetch (`/profile/${username}/${page}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            bio: updatedContent
+        })
+    })
+    .then(() => viewProfile(username))
+}
 
 function viewContent (postId) {
 
@@ -121,12 +142,11 @@ function viewContent (postId) {
                 <p id="post-content">${data.post.content} </p>
                 <b> ${data.post.likes_count} likes.</b><br><br>
                 <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
-
                     <div id="edit-form" style="display: none;">
                         <textarea id="edit-content">${data.post.content}</textarea>
                         <button id="save-edit">Save</button>
                         <button id="cancel-edit">Cancel</button>
-                        </div>
+                    </div>
             </div>
                 `;
                 
@@ -139,7 +159,7 @@ function viewContent (postId) {
             })
 
             followButton.addEventListener ('click', function() {
-                followUser(data.post.author.username, data.is_following, data.post.id);
+                followUser(data.post.author.username, data.is_following, 'post', data.post.id);
             })
 
             editButton.addEventListener('click', function() {
@@ -152,18 +172,19 @@ function viewContent (postId) {
             });
             
             const saveEdit = document.querySelector(`#save-edit`);
+            const cancelEdit = document.querySelector(`#cancel-edit`);
             
             saveEdit.addEventListener('click', function() {
                 const updatedContent = document.querySelector(`#edit-content`).value;
                 editPost(data.post.id, updatedContent);
             });
 
-            const cancelEdit = document.querySelector(`#cancel-edit`);
             cancelEdit.addEventListener('click', function() {
                 viewContent(data.post.id);
             });
 
             container.append(likeButton);
+
             if (data.can_edit) { container.append(editButton); }
             else { container.append(followButton); }
 
@@ -195,14 +216,50 @@ function viewProfile(username, page = 1) {
 
             const container = document.querySelector('#profile-view');
             container.innerHTML = ''; 
-            const profile = document.createElement('div');
-            profile.innerHTML = `
+            // const profile = document.createElement('div');
+            container.innerHTML = `
                 <h2>${data.profile.user.first_name} (@${data.profile.user.username})</h2>
                 <small>Joined ${data.profile.created_at}</small>
-                <p>${data.profile.bio}</p>
+
+                <p id="bio-content">${data.has_bio ? data.profile.bio : 'No bio yet.'}</p>
                 <p>${data.following} following. ${data.followers} followers.</p>
+                <div id="bio-form" style="display: none;">
+                        <textarea id="edit-bio">${data.has_bio ? data.profile.bio : 'No bio yet.'}</textarea>
+                        <button id="save-bio">Save</button>
+                        <button id="cancel-bio">Cancel</button>
+                </div>
+
             `;
-            container.appendChild(profile);
+            const editButton = createButton ("Edit");
+            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
+
+            const saveBio = document.querySelector(`#save-bio`);
+            const cancelBio = document.querySelector(`#cancel-bio`);
+            
+            followButton.addEventListener ('click', function() {
+                followUser(data.profile.user.username, data.is_following, 'profile', null);
+            })
+            saveBio.addEventListener('click', function() {
+                const updatedContent = document.querySelector(`#edit-bio`).value;
+                editProfile(username, page, updatedContent);
+            });
+
+            cancelBio.addEventListener('click', function() {
+                viewProfile(data.profile.user.username);
+            });
+
+            editButton.addEventListener('click', function() {
+                const editForm = document.querySelector(`#bio-form`);
+                const content = document.querySelector(`#bio-content`);
+                editForm.style.display = 'block';
+                content.style.display = 'none';
+                editButton.style.display = 'none';
+            });
+            
+            if (data.can_edit) { container.append(editButton); }
+            else { container.append(followButton); }
+
+
             loadPosts (data.profile.user.username, data, true)
         })
 }

@@ -21,7 +21,7 @@ class User (AbstractUser):
 class UserProfile (models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE, related_name = 'profile')
     profile_picture = models.ImageField(upload_to = 'profile_pics', blank = True, null = True)
-    bio = models.TextField(blank = True, default ='No bio yet.')
+    bio = models.TextField(blank = True)
     created_at = models.DateTimeField(auto_now_add = True)
     
     def serialize (self):
@@ -46,13 +46,14 @@ class Post (models.Model):
     def likes_count (self):
         return self.liked_by.all().count()
     
-    def serialize(self):
+    def serialize(self, user):
             return {
             'id': self.id,
             'author': {
                 'username': self.author.username,
                 'first_name': self.author.first_name,
             },
+            "is_liked": user in self.liked_by.all(),
             'content': self.content,
             'media': self.media.url if self.media else None,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),

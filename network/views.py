@@ -85,7 +85,7 @@ def create_post(request):
             new_entry.save()
             return JsonResponse({
                 'success': True,
-                'post': new_entry.serialize()
+                'post': new_entry.serialize(request.user)
             })
 
 
@@ -131,7 +131,7 @@ def content(request, post_id):
     if request.method == "GET":
         return JsonResponse({
                 'success': True,
-                'post': post.serialize(),
+                'post': post.serialize(request.user),
                 'can_edit': post.author == request.user,
                 'is_liked': request.user in post.liked_by.all(),
                 'is_following': request.user in post.author.followers.all()
@@ -144,7 +144,7 @@ def content(request, post_id):
         post.save()
         return JsonResponse({
             'success': True,
-            'post': post.serialize()
+            'post': post.serialize(request.user)
         })
 
 def filter (request, scope, page):
@@ -163,12 +163,11 @@ def filter (request, scope, page):
 def posts(request, scope, page):
     
     posts, has_next, has_previous = filter (request, scope, page)
-    
     return JsonResponse  ({
-            'posts': [entry.serialize() for entry in posts],
+            'posts': [entry.serialize(request.user) for entry in posts],
             'page_number': page,
             'has_next': has_next,
-            'has_previous': has_previous
+            'has_previous': has_previous,
         })
 
 def paginate (posts, index):
@@ -194,7 +193,7 @@ def profile (request, username, page):
                             'can_edit': user == request.user,
                             'has_bio': profile.bio != None,
                             'is_following': request.user in user.followers.all(),
-                            'posts': [entry.serialize() for entry in posts], 
+                            'posts': [entry.serialize(request.user) for entry in posts], 
                             'page_number': page, 'has_next': has_next, 'has_previous': has_previous})
     
     if request.method == "PUT":

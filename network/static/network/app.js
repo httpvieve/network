@@ -66,7 +66,7 @@ function createButton(label) {
     return button;
   }
 
-function likePost (postId, isLiked, windowState, key) {
+function likePost (postId, isLiked, windowState, username) {
 
     fetch (`/post/${postId}/like`, {
         method: 'PUT',
@@ -75,10 +75,11 @@ function likePost (postId, isLiked, windowState, key) {
         })
     })
     .then(() => {
-        if (windowState == '') {}
-        if (windowState == '') {}
-        if (windowState == '') {}
-        viewContent(postId)
+        if (windowState == 'following') { viewPosts('following') }
+        if (windowState == 'all') { viewPosts('all') }
+        if (windowState == 'content') { viewContent(postId) }
+        if (windowState == 'profile') { viewProfile(username) }
+        // if (windowState == 'follow_list') {}
     })
 }
 
@@ -155,7 +156,7 @@ function viewContent (postId) {
             const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
 
             likeButton.addEventListener ('click', function() {
-                likePost(data.post.id, data.is_liked);
+                likePost(data.post.id, data.is_liked, 'content', null);
             })
 
             followButton.addEventListener ('click', function() {
@@ -291,10 +292,12 @@ function loadPosts (scope, posts, isProfile) {
         const post = document.createElement ('div'); 
         post.className = 'post-card';
         post.innerHTML = `
+        <hr> <br>
             <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile">${entry.author.first_name} <b>${entry.author.username}</b></a>
             <small>${entry.created_at}</small>
             <a href="# id="content" data-id="${entry.id}" class="content-link" >${entry.content}</a>
             <p>${entry.likes_count} likes. </p><br>
+            <button class="like-button" data-id="${entry.id}">${entry.is_liked ? 'Unlike' : 'Like'}</button>
 
         `;
 
@@ -309,7 +312,14 @@ function loadPosts (scope, posts, isProfile) {
             event.preventDefault();
             viewContent(this.dataset.id);
         });
-
+        const likeButton = post.querySelector('.like-button');
+        likeButton.addEventListener ('click', function() {
+            if (isProfile) {
+                likePost(this.dataset.id, entry.is_liked, 'profile', entry.author.username);
+            } else {   
+                likePost(this.dataset.id, entry.is_liked, scope, null);
+            }
+        })
         container.appendChild(post);
     });
 

@@ -15,7 +15,10 @@ import json
 MAX_POSTS = 10
 
 def index(request):
-    user = UserProfile.objects.get(user = request.user) 
+    user = None
+    if request.method == "POST":
+        user = UserProfile.objects.get(user = request.user) 
+
     return render(request, "network/index.html", {
     'post_form': PostForm(),
     'profile': ProfileForm(instance=user)
@@ -75,18 +78,38 @@ def register(request):
     else:
         return render(request, "network/register.html")
 
+@login_required
+def comment(request, post_id):
+    
+    post = Post.objects.get(pk=post_id)
+    comments = post.comments.order_by('-created_at')
+    
+    if request.method == "POST":
+        data = json.loads(request.body)
+        comment = Comment(
+            post = post,
+            author = request.user,
+            content = data.get("content")
+            )
+        comment.save()
+        return JsonResponse({"message": "Comment added successfully.", "comment": comment.serialize()}, status=201)
+    elif request.method == "GET":
+        return JsonResponse({"comments": [comment.serialize() for comment in comments]}, safe=False)
+    else: 
+        return JsonResponse({"error": "Invalid request."}, status=400)
+
+@csrf_exempt
 @login_required 
 def create_post(request):
+    
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_entry = form.save(commit=False)
-            new_entry.author = request.user
-            new_entry.save()
-            return JsonResponse({
-                'success': True,
-                'post': new_entry.serialize(request.user)
-            })
+        data = json.loads(request.body)
+        post = Post(
+                author = request.user,
+                content = data.get("content")
+                )
+        post.save()
+        return JsonResponse({ 'success': True, 'post': post.serialize(request.user)})
 
 
 @csrf_exempt
@@ -94,6 +117,7 @@ def create_post(request):
 def like_post (request, post_id):
     
     post = Post.objects.get (pk=post_id)
+    
     if request.method == "PUT":
         # if liked -> unlike
         if request.user in post.liked_by.all():
@@ -108,29 +132,17 @@ def like_post (request, post_id):
         
     return JsonResponse ({'success': False})
 
-# def edit_profile (request):
-#     if request.method == "PUT":
-#         profile = UserProfile.objects.get(user = request.user)
-#         data = json.loads(request.body)
-        
-#         if 'bio' in data:
-#             profile.bio = data['bio']
-#         if 'profile_picture' in data:
-#             profile.profile_picture = data['profile_picture']
-#         if 'name' in data:
-#             profile.bio = data['bio']
-#         if 'bio' in data:
-#             profile.bio = data['bio']
-#         profile.save()
 
 @csrf_exempt
 @login_required 
 def content(request, post_id):
     
     post = Post.objects.get(id=post_id)
+    comments = post.comments.order_by('-created_at')
     if request.method == "GET":
         return JsonResponse({
                 'success': True,
+                'comments': [comment.serialize() for comment in comments],
                 'post': post.serialize(request.user),
                 'can_edit': post.author == request.user,
                 'is_liked': request.user in post.liked_by.all(),
@@ -146,6 +158,17 @@ def content(request, post_id):
             'success': True,
             'post': post.serialize(request.user)
         })
+
+    if request.method == "POST":
+        
+        data = json.loads(request.body)
+        comment = Comment(
+            post = post,
+            author = request.user,
+            content = data.get("content")
+            )
+        comment.save()
+        return JsonResponse({"message": "Comment added successfully.", "comment": comment.serialize()}, status=201)
 
 def filter (request, scope, page):
     
@@ -179,6 +202,7 @@ def paginate (posts, index):
     has_next, has_previous = current.has_next(), current.has_previous()
     
     return entries, has_next, has_previous
+
 @csrf_exempt
 @login_required 
 def profile (request, username, page):

@@ -1,5 +1,4 @@
 
-
 var DECREMENT = -1;
 var INCREMENT = 1;
 
@@ -29,17 +28,23 @@ document.addEventListener('DOMContentLoaded', function() {
     container.innerHTML = `
         <div id="create-post">
             <textarea id="new-post" placeholder="What's happening?"></textarea>
-            <button id="submit-post">Post</button>
+            <button id="submit-post" disabled>Post</button>
         </div>
     `;
-
+    
     const submit = document.getElementById('submit-post')
     const newPost = document.getElementById('new-post');
-    document.addEventListener('keyup', () => { submit.disabled = newPost.value === '';});
-    submit.addEventListener('click', () => {
+    
+    function updateSubmitButton() {
+        submit.disabled = newPost.value.trim() === '';
+    }
+    
+    newPost.addEventListener('input', updateSubmitButton);
+    
+    submit.addEventListener('click', (e) => {
         e.preventDefault();
         submit.disabled = true;
-
+    
         fetch('/posts/create', {
             method: 'POST',
             body: JSON.stringify({ content: newPost.value })
@@ -48,17 +53,19 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 newPost.value = '';
+                updateSubmitButton();
                 viewPosts('all');
             } else {
                 console.error('Error adding post:', data.error);
             }
         })
+        .finally(() => {
+            submit.disabled = false;
+        });
     });
 
     viewPosts('all');
 });
-
-
 
 function createButton(label) {
     const button = document.createElement('button');
@@ -83,6 +90,7 @@ function addComment(postId, content) {
     })
     .catch(error => console.error('Error:', error));
 }
+
 function viewComments(postId) {
     fetch(`/post/${postId}`)
         .then(response => response.json())
@@ -101,11 +109,13 @@ function viewComments(postId) {
         })
         .catch(error => console.error('Error:', error));
 }
-function likePost(postId, isLiked) {
+
+function likePost(state, postId, isLiked) {
+
     fetch(`/post/${postId}/like`, {
         method: 'PUT',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             is_liked: !isLiked
@@ -114,11 +124,10 @@ function likePost(postId, isLiked) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const postElement = document.querySelector(`.post-card[data-id="${postId}"]`);
+            const postElement = state == 'content' ? document.querySelector('.content-card') : document.querySelector(`.post-card[data-id="${postId}"]`);
             if (postElement) {
                 const likeButton = postElement.querySelector('.like-button');
                 const likesCountElement = postElement.querySelector('.likes-count');
-                
                 likeButton.textContent = data.is_liked ? 'Unlike' : 'Like';
                 likeButton.dataset.liked = data.is_liked;
                 likesCountElement.textContent = `${data.likes_count} likes.`;
@@ -176,91 +185,99 @@ function viewContent (postId) {
     document.querySelector('#create-view').style.display = 'none';
     document.querySelector('#posts-view').style.display = 'none';
     document.querySelector('#paginator').style.display = 'none'; 
+    const container = document.querySelector('#content-view');
+    container.innerHTML = '';
     fetch (`/post/${postId}`)
         .then (response => response.json())
         .then (data => {
-            console.log(data);
-            const container = document.querySelector('#content-view');
-            container.innerHTML = `
-            <div>
+            const content = document.createElement ('div');
+            content.className = 'content-card';
+            content.innerHTML = `
                 <button id="back-to-posts" class="back-btn" >Back to Posts</button><br><br>
-                <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile">${data.post.author.first_name} <b>${data.post.author.username}</b></a>
-                <small>${data.post.created_at}</small>
-                
-                <p id="post-content">${data.post.content} </p>
-                <b> ${data.post.likes_count} likes.</b><br><br>
-                <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
-                    <div id="edit-form" style="display: none;">
+                <span>
+                    <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile">${data.post.author.first_name} <b>${data.post.author.username}</b></a>
+                    <div id="edit-follow-button-placeholder"></div>
+                </span><br>
+                <span>
+                    <small>${data.post.created_at}</small>
+                    <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
+                </span>
+
+                <pre id="post-content">${data.post.content} </pre>
+
+                <div id="edit-form" style="display: none;">
                         <textarea id="edit-content">${data.post.content}</textarea>
                         <button id="save-edit">Save</button>
                         <button id="cancel-edit">Cancel</button>
                 </div>
-            </div>
+
+                <p class="likes-count"> ${data.post.likes_count} likes.</p>
+                
+                <button class="like-button" data-id="${data.post.id}"> ${data.is_liked ? 'Unlike' : 'Like'} </button><br><br>
+
+                <div id="comments-section">
+                    <h3>Comments</h3>
+                    <textarea id="new-comment" placeholder="Add a comment..."></textarea>
+                    <button id="submit-comment">Submit Comment</button>
+                    <div id="comments-list"></div>
+                </div>
+
                 `;
-            
-            const editButton = createButton ("Edit");
-            const likeButton = createButton (data.is_liked ? "Unlike" : "Like");
-            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
 
-
+            const likeButton = content.querySelector('.like-button');
             likeButton.addEventListener ('click', function() { 
-                likePost (data.post.id, data.is_liked); 
-            })
+                likePost('content', this.dataset.id, this.textContent === 'Unlike');
+            });
+            
+            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
             followButton.addEventListener ('click', function() { 
                 followUser (data.post.author.username, data.is_following, 'post', data.post.id); 
             })
+            
+            const editButton = createButton ("Edit");
             editButton.addEventListener('click', function() {
-                const editForm = document.querySelector(`#edit-form`);
-                const content = document.querySelector(`#post-content`);
+                const editForm = content.querySelector(`#edit-form`);
+                const postContent = content.querySelector(`#post-content`);
                 editForm.style.display = 'block';
-                content.style.display = 'none';
+                postContent.style.display = 'none';
                 likeButton.style.display = 'none';
                 editButton.style.display = 'none';
             });
-
-            container.append(likeButton);
             
-            if (data.can_edit) { container.append(editButton); }
-            else { container.append(followButton); }
+            if (data.can_edit) { content.querySelector('#edit-follow-button-placeholder').replaceWith(editButton); }
+            else {content.querySelector('#edit-follow-button-placeholder').replaceWith(followButton); }
             
-            const cancelEdit = document.querySelector(`#cancel-edit`);
+            const cancelEdit = content.querySelector(`#cancel-edit`);
             cancelEdit.addEventListener('click', function() { 
                 viewContent(data.post.id); 
             });
 
-            const backButton = container.querySelector('.back-btn');
+            const backButton = content.querySelector('.back-btn');
             backButton.addEventListener('click', function() { 
                 viewPosts('all'); 
             });
 
-            const saveEdit = document.querySelector(`#save-edit`);
+            const saveEdit = content.querySelector(`#save-edit`);
             saveEdit.addEventListener('click', function() {
-                const updatedContent = document.querySelector(`#edit-content`).value;
+                const updatedContent = content.querySelector(`#edit-content`).value;
                 editPost(data.post.id, updatedContent);
             });
             
-            const profileLink = container.querySelector('.profile-link');
+            const profileLink = content.querySelector('.profile-link');
             profileLink.addEventListener('click', function(event) {
                 event.preventDefault();
                 viewProfile(this.dataset.username);
             });
 
-            container.innerHTML += `
-            <div id="comments-section">
-                <h3>Comments</h3>
-                <div id="comments-list"></div>
-                <textarea id="new-comment" placeholder="Add a comment..."></textarea>
-                <button id="submit-comment">Submit Comment</button>
-            </div>
-            `;
-            
-            viewComments(postId);
-            document.getElementById('submit-comment').addEventListener('click', () => {
-                const content = document.getElementById('new-comment').value;
-                if (content) {
-                    addComment(postId, content);
+            const submitComment = content.querySelector(`#submit-comment`);
+            submitComment.addEventListener('click', () => {
+                const comment = document.getElementById('new-comment').value;
+                if (comment) {
+                    addComment(postId, comment);
                 }
             });
+            container.appendChild(content);
+            viewComments(data.post.id);
         })
         .catch(error => console.error('Error:', error));
 }
@@ -292,24 +309,24 @@ function viewProfile(username, page = 1) {
                 </div>
 
             `;
-            const editButton = createButton ("Edit");
-            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
 
-            const saveBio = document.querySelector(`#save-bio`);
-            const cancelBio = document.querySelector(`#cancel-bio`);
-            
+            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
             followButton.addEventListener ('click', function() {
                 followUser(data.profile.user.username, data.is_following, 'profile', null);
             })
+
+            const saveBio = document.querySelector(`#save-bio`);
             saveBio.addEventListener('click', function() {
                 const updatedContent = document.querySelector(`#edit-bio`).value;
                 editProfile(username, page, updatedContent);
             });
-
+            
+            const cancelBio = document.querySelector(`#cancel-bio`);
             cancelBio.addEventListener('click', function() {
                 viewProfile(data.profile.user.username);
             });
 
+            const editButton = createButton ("Edit");
             editButton.addEventListener('click', function() {
                 const editForm = document.querySelector(`#bio-form`);
                 const content = document.querySelector(`#bio-content`);
@@ -321,8 +338,7 @@ function viewProfile(username, page = 1) {
             if (data.can_edit) { container.append(editButton); }
             else { container.append(followButton); }
 
-
-            loadPosts (data.profile.user.username, data, true)
+            loadPosts (data.profile.user.username, data, true);
         })
 }
 
@@ -358,7 +374,7 @@ function loadPosts (scope, posts, isProfile) {
             <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile">${entry.author.first_name} <b>${entry.author.username}</b></a>
             <small>${entry.created_at}</small>
             <a href="# id="content" data-id="${entry.id}" class="content-link" >${entry.content}</a>
-            <p class = "likes-count">${entry.likes_count} likes. </p><br>
+            <p class ="likes-count">${entry.likes_count} likes. </p><br>
             <button class="like-button" data-id="${entry.id}">${entry.is_liked ? 'Unlike' : 'Like'}</button>
         `;
 
@@ -373,9 +389,10 @@ function loadPosts (scope, posts, isProfile) {
             event.preventDefault();
             viewContent(this.dataset.id);
         });
+
         const likeButton = post.querySelector('.like-button');
         likeButton.addEventListener('click', function() {
-            likePost(this.dataset.id, this.textContent === 'Unlike');
+            likePost('view', this.dataset.id, this.textContent === 'Unlike');
         });
 
         container.appendChild(post);

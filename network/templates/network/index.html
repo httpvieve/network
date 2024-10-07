@@ -4,18 +4,23 @@
 
 
 <div id="create-view">
-   <form id="create-form" method="post">
+</div>
+
+<div id="profile-view">
+    <form class="profile-form" method="post">
         {% csrf_token %}
-        {{ post_form }}
-        <button id="submit-post" type="submit">Post</button>
+        {{ profile }}
+        <button id="submit-profile" type="submit">Post</button>
     </form>
 </div>
 
-<div id="profile-view"></div>
+
 <div id="posts-view"></div>
-<div id="content-view"></div>
+<div id="content-view">
+    <div id="comments-view"></div>
+</div>
 <div id="paginator"></div>
 
-<script src="{% static 'network/app.js' %}"></script>
+<script src="{% static 'network/app.js' %}"></scrip>
 
 {% endblock %}

@@ -3,8 +3,8 @@
 {% block body %}
 
 
-<div id="create-view">
-</div>
+<div class="container">
+<div id="create-view" class="create-view"></div>
 
 <div id="profile-view">
     <form class="profile-form" method="post">
@@ -14,13 +14,13 @@
     </form>
 </div>
 
-
 <div id="posts-view"></div>
 <div id="content-view">
     <div id="comments-view"></div>
 </div>
-<div id="paginator"></div>
-
-<script src="{% static 'network/app.js' %}"></scrip>
+<div id="paginator"></div> 
+</div> 
+<script src="{% static 'network/component.js' %}"></script>
+<script src="{% static 'network/animation.js' %}"></script>
 
 {% endblock %}

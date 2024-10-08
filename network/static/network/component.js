@@ -26,9 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const container = document.querySelector('#create-view')
     container.innerHTML = `
-        <div id="create-post">
-            <textarea id="new-post" placeholder="What's happening?"></textarea>
-            <button id="submit-post" disabled>Post</button>
+        <div id="create-post" class="create-tweet">
+            <textarea id="new-post" class="tweet-compose" placeholder="What's happening?"></textarea>
+            <button id="submit-post" class="tweet-button" disabled>Post</button>
         </div>
     `;
     
@@ -101,16 +101,33 @@ function viewComments(postId) {
                 const commentElement = document.createElement('div');
                 commentElement.className = 'comment';
                 commentElement.innerHTML = `
-                    <p><strong>${comment.author.first_name}</strong> @${comment.author.username}: ${comment.content}</p>
-                    <small>${comment.created_at}</small>
+                    <a href="#" data-username="${comment.author.username}" class="profile-link"  id="profile"> ${comment.author.first_name} <b>@${comment.author.username}</b></a> 
+                    <small class="timestamp">${comment.created_at}</small>
+                    <p>${comment.content}</p>
                 `;
+
+                const profile = commentElement.querySelector ('.profile-link');
+                    profile.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    viewProfile(this.dataset.username);
+                });
+                
                 commentsList.appendChild(commentElement);
             });
         })
         .catch(error => console.error('Error:', error));
 }
 
-function likePost(state, postId, isLiked) {
+
+function likePost(state, postId) {
+    const postElement = state === 'content' 
+        ? document.querySelector('.content-card') 
+        : document.querySelector(`.post-card[data-id="${postId}"]`);
+
+    if (!postElement) return;
+
+    const likeButton = postElement.querySelector('.like-button');
+    const isLiked = likeButton.dataset.liked === 'true';
 
     fetch(`/post/${postId}/like`, {
         method: 'PUT',
@@ -124,21 +141,19 @@ function likePost(state, postId, isLiked) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const postElement = state == 'content' ? document.querySelector('.content-card') : document.querySelector(`.post-card[data-id="${postId}"]`);
-            if (postElement) {
-                const likeButton = postElement.querySelector('.like-button');
-                const likesCountElement = postElement.querySelector('.likes-count');
-                likeButton.textContent = data.is_liked ? 'Unlike' : 'Like';
-                likeButton.dataset.liked = data.is_liked;
-                likesCountElement.textContent = `${data.likes_count} likes.`;
-            }
+            const likesCountElement = postElement.querySelector('.likes-count');
+            const likeTextElement = likeButton.querySelector('span');
+            
+            likeButton.dataset.liked = data.is_liked;
+            likeTextElement.textContent = data.is_liked ? 'Unlike' : 'Like';
+            likesCountElement.textContent = `${data.likes_count} likes`;
+            likeButton.classList.toggle('liked', data.is_liked);
         } else {
             console.error('Error updating like status:', data.error);
         }
     })
     .catch(error => console.error('Error:', error));
 }
-
 function followUser (username, isFollowing, windowState, key) {
 
     fetch (`profile/${username}/follow`, {
@@ -180,11 +195,8 @@ function editProfile (username, page, updatedContent) {
 
 function viewContent (postId) {
 
+    document.querySelector('.feed').classList.add('hidden');
     document.querySelector('#content-view').style.display = 'block';
-    document.querySelector('#profile-view').style.display = 'none';
-    document.querySelector('#create-view').style.display = 'none';
-    document.querySelector('#posts-view').style.display = 'none';
-    document.querySelector('#paginator').style.display = 'none'; 
     const container = document.querySelector('#content-view');
     container.innerHTML = '';
     fetch (`/post/${postId}`)
@@ -203,7 +215,7 @@ function viewContent (postId) {
                     <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
                 </span>
 
-                <pre id="post-content">${data.post.content} </pre>
+                <p id="post-content">${data.post.content} </p>
 
                 <div id="edit-form" style="display: none;">
                         <textarea id="edit-content">${data.post.content}</textarea>
@@ -212,8 +224,15 @@ function viewContent (postId) {
                 </div>
 
                 <p class="likes-count"> ${data.post.likes_count} likes.</p>
-                
-                <button class="like-button" data-id="${data.post.id}"> ${data.is_liked ? 'Unlike' : 'Like'} </button><br><br>
+
+                <div class="tweet-actions">
+                    <button class="like-button" data-id="${data.post.id}" data-liked="${data.is_liked ? 'true' : 'false'}">
+                    <svg viewBox="0 0 24 24" class="heart-icon">
+                        <path d="M12 21.638h-.014C9.403 21.59 1.95 14.856 1.95 8.478c0-3.064 2.525-5.754 5.403-5.754 2.29 0 3.83 1.58 4.646 2.73.814-1.148 2.354-2.73 4.645-2.73 2.88 0 5.404 2.69 5.404 5.755 0 6.376-7.454 13.11-10.037 13.157H12z"/>
+                    </svg>
+                    <span>${data.is_liked ? 'Unlike' : 'Like'}</span>
+                    </button>
+                </div>
 
                 <div id="comments-section">
                     <h3>Comments</h3>
@@ -225,11 +244,12 @@ function viewContent (postId) {
                 `;
 
             const likeButton = content.querySelector('.like-button');
+            //likeButton.className= data.is_liked ? 'unlike-icon': 'liked-icon' ;
             likeButton.addEventListener ('click', function() { 
                 likePost('content', this.dataset.id, this.textContent === 'Unlike');
             });
             
-            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
+            const followButton = createButton (data.is_following ? "Unfollow" : "Follow + ");
             followButton.addEventListener ('click', function() { 
                 followUser (data.post.author.username, data.is_following, 'post', data.post.id); 
             })
@@ -278,16 +298,17 @@ function viewContent (postId) {
             });
             container.appendChild(content);
             viewComments(data.post.id);
+            window.scrollTo(0, 0);
         })
         .catch(error => console.error('Error:', error));
 }
 
 function viewProfile(username, page = 1) {
-
+    
     document.querySelector('#profile-view').style.display = 'block';
-    document.querySelector('#create-view').style.display = 'none';
-    document.querySelector('#posts-view').style.display = 'block';
-    document.querySelector('#paginator').style.display = 'block';
+    document.querySelector('#content-view').style.display = 'none';
+    document.querySelector('.feed').classList.remove('hidden');
+    document.querySelector('.create-view').classList.add('hidden');
 
     fetch(`/profile/${encodeURIComponent(username)}/${page}`)
         .then(response => response.json())
@@ -301,16 +322,19 @@ function viewProfile(username, page = 1) {
                 <small>Joined ${data.profile.created_at}</small>
 
                 <p id="bio-content">${data.has_bio ? data.profile.bio : 'No bio yet.'}</p>
-                <p>${data.following} following. ${data.followers} followers.</p>
+                
                 <div id="bio-form" style="display: none;">
-                        <textarea id="edit-bio">${data.has_bio ? data.profile.bio : 'No bio yet.'}</textarea>
-                        <button id="save-bio">Save</button>
-                        <button id="cancel-bio">Cancel</button>
+                    <textarea id="edit-bio">${data.has_bio ? data.profile.bio : 'No bio yet.'}</textarea>
+                    <button id="save-bio">Save</button>
+                    <button id="cancel-bio">Cancel</button>
                 </div>
+                <button id="edit-button">Edit</button>
+                <p>${data.following} following. ${data.followers} followers.</p>
+                <button id="follow-button">${data.is_following ? "Unfollow" : "Follow"}</button>
 
             `;
 
-            const followButton = createButton (data.is_following ? "Unfollow" : "Follow");
+            const followButton = document.querySelector(`#follow-button`);
             followButton.addEventListener ('click', function() {
                 followUser(data.profile.user.username, data.is_following, 'profile', null);
             })
@@ -326,7 +350,7 @@ function viewProfile(username, page = 1) {
                 viewProfile(data.profile.user.username);
             });
 
-            const editButton = createButton ("Edit");
+            const editButton = document.querySelector(`#edit-button`);
             editButton.addEventListener('click', function() {
                 const editForm = document.querySelector(`#bio-form`);
                 const content = document.querySelector(`#bio-content`);
@@ -335,10 +359,10 @@ function viewProfile(username, page = 1) {
                 editButton.style.display = 'none';
             });
             
-            if (data.can_edit) { container.append(editButton); }
-            else { container.append(followButton); }
-
+            if (data.can_edit) { followButton.style.display = 'none'; }
+            else { editButton.style.display = 'none'; }
             loadPosts (data.profile.user.username, data, true);
+            window.scrollTo(0, 0);
         })
 }
 
@@ -346,9 +370,8 @@ function viewPosts(scope, page = 1) {
 
     document.querySelector('#content-view').style.display = 'none';
     document.querySelector('#profile-view').style.display = 'none';
-    document.querySelector('#create-view').style.display = 'block';
-    document.querySelector('#posts-view').style.display = 'block';
-    document.querySelector('#paginator').style.display = 'block';
+    document.querySelector('.create-view').classList.remove('hidden');
+    document.querySelector('.feed').classList.remove('hidden');
 
         fetch(`/posts/${encodeURIComponent(scope)}/${page}`)
         .then (response => response.json())
@@ -370,12 +393,28 @@ function loadPosts (scope, posts, isProfile) {
         post.className = 'post-card';
         post.dataset.id = entry.id;
         post.innerHTML = `
-        <hr> <br>
-            <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile">${entry.author.first_name} <b>${entry.author.username}</b></a>
-            <small>${entry.created_at}</small>
-            <a href="# id="content" data-id="${entry.id}" class="content-link" >${entry.content}</a>
-            <p class ="likes-count">${entry.likes_count} likes. </p><br>
-            <button class="like-button" data-id="${entry.id}">${entry.is_liked ? 'Unlike' : 'Like'}</button>
+        <div class="entry-card">
+  <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile">
+    ${entry.author.first_name} <b>@${entry.author.username}</b>
+  </a>
+  <small class="timestamp">${entry.created_at}</small>
+  <a href="#" id="content" data-id="${entry.id}" class="content-link">${entry.content}</a>
+  <p class="likes-count">${entry.likes_count} likes</p>
+  <div class="tweet-actions">
+<button class="like-button" data-id="${entry.id}" data-liked="${entry.is_liked ? 'true' : 'false'}">
+  <svg viewBox="0 0 24 24" class="heart-icon">
+    <path d="M12 21.638h-.014C9.403 21.59 1.95 14.856 1.95 8.478c0-3.064 2.525-5.754 5.403-5.754 2.29 0 3.83 1.58 4.646 2.73.814-1.148 2.354-2.73 4.645-2.73 2.88 0 5.404 2.69 5.404 5.755 0 6.376-7.454 13.11-10.037 13.157H12z"/>
+  </svg>
+  <span>${entry.is_liked ? 'Unlike' : 'Like'}</span>
+</button>
+    <button class="comment-button" data-id="${entry.id}">
+      <svg viewBox="0 0 24 24" class="comment-icon">
+        <path d="M14.046 2.242l-4.148-.01h-.002c-4.374 0-7.8 3.427-7.8 7.802 0 4.098 3.186 7.206 7.465 7.37v3.828c0 .108.044.286.12.403.142.225.384.347.632.347.138 0 .277-.038.402-.118.264-.168 6.473-4.14 8.088-5.506 1.902-1.61 3.04-3.97 3.043-6.312v-.017c-.006-4.367-3.43-7.787-7.8-7.788zm3.787 12.972c-1.134.96-4.862 3.405-6.772 4.643V16.67c0-.414-.335-.75-.75-.75h-.396c-3.66 0-6.318-2.476-6.318-5.886 0-3.534 2.768-6.302 6.3-6.302l4.147.01h.002c3.532 0 6.3 2.766 6.302 6.296-.003 1.91-.942 3.844-2.514 5.176z"/>
+      </svg>
+      <span>Comment</span>
+    </button>
+  </div>
+</div>
         `;
 
         const profile = post.querySelector ('.profile-link');
@@ -389,13 +428,17 @@ function loadPosts (scope, posts, isProfile) {
             event.preventDefault();
             viewContent(this.dataset.id);
         });
-
+        const commentButton = post.querySelector('.comment-button');
+        commentButton.addEventListener('click', function() {
+            viewContent(this.dataset.id);
+        });
         const likeButton = post.querySelector('.like-button');
         likeButton.addEventListener('click', function() {
             likePost('view', this.dataset.id, this.textContent === 'Unlike');
         });
 
         container.appendChild(post);
+        window.scrollTo(0, 0);
     });
 
     const paginator = document.querySelector ('#paginator');

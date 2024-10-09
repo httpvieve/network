@@ -146,7 +146,8 @@ def content(request, post_id):
                 'post': post.serialize(request.user),
                 'can_edit': post.author == request.user,
                 'is_liked': request.user in post.liked_by.all(),
-                'is_following': request.user in post.author.followers.all()
+                'is_following': request.user in post.author.followers.all(),
+                'comments_count': comments.count()
             })
         
     if request.method == "PUT":

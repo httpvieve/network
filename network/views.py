@@ -214,7 +214,11 @@ def profile (request, username, page):
         
         return JsonResponse ({'following': user.following.count(),
                             'followers': user.followers.count(),
+                            'current_following': [profile.serialize() for profile in request.user.following.all()],
+                            'following_list': [profile.serialize() for profile in user.following.all()],
+                            'follower_list': [profile.serialize() for profile in user.followers.all()],
                             'profile': profile.serialize(),
+                            'current_user': request.user.serialize(),
                             'can_edit': user == request.user,
                             'has_bio': profile.bio != None,
                             'is_following': request.user in user.followers.all(),

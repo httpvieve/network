@@ -2,17 +2,22 @@
 {% load static %}
 {% block body %}
 
-<div id="profile-view">
-    <form class="profile-form" method="post">
-        {% csrf_token %}
-        {{ profile }}
-        <button id="submit-profile" type="submit">Post</button>
-    </form>
-</div>
+<section class="profile">
+    <div id="profile-view" class="profile-view">
+        <form class="profile-form" method="post">
+            {% csrf_token %}
+            {{ profile }}
+            <button id="submit-profile" type="submit">Post</button>
+        </form>
+    </div>
+    <div id="follow-list" class="follow-list"></div>
+    
+</section>
 
-<div id="content-view">
+<section class="content">
+    <div id="content-view"></div>
     <div id="comments-view"></div>
-</div>
+</section>
 
 <section class="feed">
     <div id="create-view" class="create-view"></div>
@@ -21,6 +26,5 @@
 </section> 
 
 <script src="{% static 'network/component.js' %}"></script>
-<script src="{% static 'network/animation.js' %}"></script>
 
 {% endblock %}

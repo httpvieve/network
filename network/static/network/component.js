@@ -67,13 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
     viewPosts('all');
 });
 
-function createButton(label) {
-    const button = document.createElement('button');
-    // button.className = className;
-    button.innerHTML = `${label}`;
-    return button;
-  }
-
 function addComment(postId, content) {
     fetch(`/post/${postId}`, {
         method: 'POST',
@@ -169,6 +162,15 @@ function followUser (username, isFollowing, windowState, key) {
         if (windowState == 'profile'){
             viewProfile(username)
         } 
+        if (windowState == 'followlist'){
+            if (isFollowing) {
+                key.currentFollowing = key.currentFollowing.filter(user => user.username !== username);
+            } else {
+                key.currentFollowing.push({ username: username });
+            }
+            viewFollowList(key.followList, key.currentFollowing, key.currentUser);
+        
+        }
     })
 }
 
@@ -196,7 +198,8 @@ function editProfile (username, page, updatedContent) {
 function viewContent (postId) {
 
     document.querySelector('.feed').classList.add('hidden');
-    document.querySelector('#content-view').style.display = 'block';
+    document.querySelector('.profile').classList.add('hidden');
+    document.querySelector('.content').classList.remove('hidden');
     const container = document.querySelector('#content-view');
     container.innerHTML = '';
     fetch (`/post/${postId}`)
@@ -309,13 +312,48 @@ function viewContent (postId) {
         })
         .catch(error => console.error('Error:', error));
 }
+function viewFollowList (followList, currentFollowing, currentUser) {
 
-function viewProfile(username, page = 1) {
+    document.querySelector('.profile-view').classList.add('hidden');
+    document.querySelector('.follow-list').classList.remove('hidden');
+    document.querySelector('.feed').classList.add('hidden');
+
+    const container = document.querySelector ('.follow-list');
+    container.innerHTML = ``;
+    followList.forEach(profile => { 
+        const isFollowing = currentFollowing.some(following => following.username === profile.username);
+        console.log(isFollowing);
+        const user = document.createElement('div');
+        user.className = 'follow-card'
+        user.dataset.username = profile.username;
+        user.innerHTML = `
+            <a href="#" class="profile-link" data-username="${profile.username}" id="profile"><b>${profile.first_name}</b> @${profile.username}</a>
+            <button id="follow-button" class="follow-button" data-username="${profile.username}">${isFollowing ? "Unfollow" : "Follow"}</button>
+            `;
+            const userProfile = user.querySelector ('.profile-link');
+            userProfile.addEventListener('click', function(event) {
+                event.preventDefault();
+                viewProfile(this.dataset.username);
+            });
+            
+            const followButton = user.querySelector(`.follow-button`);
+            if (profile.username == currentUser.username) { followButton.style.display = 'none'; }
+            followButton.addEventListener ('click', function() {
+                followUser(this.dataset.username, isFollowing, 'followlist', {followList, currentFollowing, currentUser});
+            })
+            container.appendChild(user);
+    })
     
-    document.querySelector('#profile-view').style.display = 'block';
-    document.querySelector('#content-view').style.display = 'none';
-    document.querySelector('.feed').classList.remove('hidden');
+}
+function viewProfile(username, page = 1) {
+
+    document.querySelector('.content').classList.add('hidden');
     document.querySelector('.create-view').classList.add('hidden');
+    document.querySelector('.follow-list').classList.add('hidden');
+
+    document.querySelector('.profile-view').classList.remove('hidden');
+    document.querySelector('.profile').classList.remove('hidden');
+    document.querySelector('.feed').classList.remove('hidden');
 
     fetch(`/profile/${encodeURIComponent(username)}/${page}`)
         .then(response => response.json())
@@ -338,14 +376,33 @@ function viewProfile(username, page = 1) {
                     <button id="save-bio">Save</button>
                     <button id="cancel-bio">Cancel</button>
                 </div>
-                <p class="follow-data">${data.following} following. ${data.followers} followers.</p>
-                
+            
+                <span class="follow-data"> 
+                    <a id="following-list" href="#">${data.following} following.</a> 
+                    <a id="follower-list" href="#">${data.followers} followers.</a>
+                </span>
 
+                
             `;
+            
+            const followingList = document.querySelector ('#following-list');
+            followingList.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (data.following > 0) {
+                    viewFollowList (data.following_list, data.current_following, data.current_user);
+                }
+                });
+
+            const followerList = document.querySelector ('#follower-list');
+            followerList.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (data.followers > 0) {
+                viewFollowList (data.follower_list, data.current_following, data.current_user);
+                }
+            });
 
             const followButton = document.querySelector(`#follow-button`);
             followButton.addEventListener ('click', function() {
-                
                 followUser(data.profile.user.username, data.is_following, 'profile', null);
             })
 
@@ -379,10 +436,11 @@ function viewProfile(username, page = 1) {
 
 function viewPosts(scope, page = 1) {
 
-    document.querySelector('#content-view').style.display = 'none';
-    document.querySelector('#profile-view').style.display = 'none';
     document.querySelector('.create-view').classList.remove('hidden');
     document.querySelector('.feed').classList.remove('hidden');
+
+    document.querySelector('.profile').classList.add('hidden');
+    document.querySelector('.content').classList.add('hidden');
 
         fetch(`/posts/${encodeURIComponent(scope)}/${page}`)
         .then (response => response.json())

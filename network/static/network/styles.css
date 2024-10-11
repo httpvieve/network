@@ -30,7 +30,7 @@ body {
 }
 
 /** PAGE CONTAINERS **/
-.create-view, .compose-view  {
+.create-view, .comments-section {
   padding-bottom: var(--margin-xxs);
   margin: var(--margin-m) 0 var(--margin-m) 0;
   border: 1px solid #cfd9de;
@@ -39,10 +39,10 @@ body {
   max-width: 900px;
 }
 
-.create-tweet {
+.create-tweet, .compose-view {
   padding: 12px 16px;
 }
-.feed, .content{
+.feed, .content {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,44 +50,53 @@ body {
   padding: 1% 30% 1% 30%;
 
 }
-.feed.hidden, 
-.content.hidden, 
-.create-view.hidden, 
-.profile.hidden, 
-.profile-view.hidden, 
-.follow-list.hidden {
+.feed.hidden, .content.hidden, .create-view.hidden, .profile.hidden, .profile-view.hidden, .follow-list.hidden {
   display: none;
 }
+.follow-card {
+  display: inline-flex;
+  justify-content:center;
 
+}
 
 /** CARD CONTAINERS **/
-.entry-card {
+.entry-card, .follow-card {
   border: 1px solid #e6ecf0;
   padding: 12px 16px;
   min-width: 800px;
   transition: background-color 0.2s;
 }
-
-.entry-card:hover {
+.comment {
+  border-bottom: 1px solid #e6ecf0;
+  padding: 12px 16px;
+  min-width: 800px;
+  transition: background-color 0.2s;
+}
+.entry-card:hover, .follow-card:hover{
   background-color: #f7f7f7;
 }
 /** FORMS **/
-#bio-form,#content-form{
-  margin-bottom: 15px;
-}
-#edit-bio,  #edit-content {
-  width: 100%;
-  height: 100px;
+
+.bio-edit,  .content-edit {
+  min-width: 750px;
+  min-height: 100px;
   padding: 10px;
   border: 1px solid #cfd9de;
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 15px;
   margin-bottom: 10px;
+} 
+.content-edit {
+  margin-top: 10px;
 }
-
+.comment-compose {
+  max-height: 20px;
+}
+.tweet-compose {
+  min-height: 60px;
+}
 .tweet-compose, .comment-compose {
   min-width: 700px ;
-  min-height: 60px;
   border: none;
   resize: none;
   font-size: 16px;
@@ -95,7 +104,9 @@ body {
   margin-bottom: 12px;
   overflow: hidden; 
 }
-
+.save {
+   margin-right: 10px;
+}
 .tweet-compose:focus, .comment-compose:focus {
   outline: none;
 }
@@ -106,11 +117,11 @@ body {
 
 
 
-
-
 /** LINKS **/
 
-
+.post-date {
+  margin-left: 10px;
+}
 .profile-link b {
   color: #14171a;
   font-size: 17px;
@@ -136,12 +147,12 @@ body {
   margin-bottom: 10px;
   display: block;
   text-decoration: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 
 }
 
-
-/** BUTTONS **/
-
+/** BUTTONS **/;;;;;;;;;ddsassdd
 
 .tweet-button:hover, .reply-button:hover {
   background-color: #1a8cd8;
@@ -151,14 +162,13 @@ body {
   opacity: 0.5;
   cursor: default;
 }
-
-.tweet-actions {
+.tweet-actions, .comments-section {
   display: flex;
   justify-content: flex-start;
   align-items: center;
 }
 
-.like-button, .comment-button, .back-btn {
+.like-button, .comment-button, .back-button {
   background: none;
   border: none;
   color: #657786;
@@ -170,16 +180,20 @@ body {
   display: flex;
   align-items: center;
 }
-
-.comment-button:hover, .back-btn:hover {
+.back-button {
+  margin-bottom: var(--margin-m);
+}
+.back-button:hover  {
+  color: var(--black);
+}
+.comment-button:hover {
   color: var(--dark-gray);
 }
 .like-button:hover {
   color: var(--blue);
 }
 
-.heart-icon,
-.comment-icon {
+.heart-icon, .comment-icon {
   width: 18px;
   height: 18px;
   margin-right: 5px;
@@ -195,17 +209,16 @@ body {
 
 .tweet-button, .reply-button {
   background-color: #1d9bf0;
-
   padding: 0 16px;
   height: 36px;
   float:right;
 } 
-.follow-button {
+.follow-button, .save {
   background-color: #000;
   border: 1px solid #000;
   padding: 10px 16px;
 }
-.follow-button, .tweet-button, .reply-button {
+.follow-button, .tweet-button, .reply-button, .save {
   color: #fff;
   border-radius: 9999px;
   font-size: 15px;
@@ -215,10 +228,10 @@ body {
   outline: none;
 }
 
-.follow-button:hover {
+.follow-button:hover, .save:hover {
     background-color: rgba(0, 0, 0, 0.8);
 }
-#edit-button, #cancel-bio {
+#edit-button {
   background-color: #fff;
   color: #1da1f2;
 }
@@ -229,18 +242,15 @@ body {
 
 
 /** PROFILE DATA **/
-.likes-count {
-  color: #657786;
-  font-size: 15px;
-  margin-bottom: 10px;
-}
-.profile, .content-card{
+
+.profile, .content-card, .follow-list{
+
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.profile-header, .content-header {
+.profile-header, .content-header, .follow-card{
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -265,4 +275,21 @@ body {
 
 .follow-data {
   color: #536471;
+}
+.follow-card {
+  height: 70px;
+}
+.likes-count {
+  color: #657786;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.post-content {
+  margin: var(--margin-xs);
+  font-size: 16px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
 }

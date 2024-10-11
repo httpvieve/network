@@ -89,7 +89,9 @@ function viewComments(postId) {
         .then(response => response.json())
         .then(data => {
             const commentsList = document.getElementById('comments-list');
+            const commentCount = data.comments.length;
             commentsList.innerHTML = '';
+            commentsList.innerHTML = `${commentCount} replies.`;
             data.comments.forEach(comment => {
                 const commentElement = document.createElement('div');
                 commentElement.className = 'comment';
@@ -208,30 +210,27 @@ function viewContent (postId) {
             const content = document.createElement ('div');
             content.className = 'content-card';
             content.innerHTML = `
-                <button id="back-to-posts" class="back-btn" >Back to Posts</button>
+                <button id="back-to-posts" class="back-button" >Back to Posts</button>
                 <div class="content-header">
                    <span> <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile"> <b>${data.post.author.first_name} </b> @${data.post.author.username} </a>
-                    <small>${data.post.created_at}</small></span>
+                    <small class="post-date">${data.post.created_at}</small></span>
                     <button id="follow-button" class="follow-button">${data.is_following ? "Unfollow" : "Follow"}</button>
                     <button id="edit-button">Edit</button>
                  </div> 
+                 <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
 
                     
-                    <p id="post-content">${data.post.content} </p>
+                <p id="post-content" class="post-content" >${data.post.content} </p>
               
-                
                 <div id="content-form" style="display: none;">
-                <textarea id="edit-content">${data.post.content}</textarea>
-                <button id="save-edit">Save</button>
-                <button id="cancel-edit">Cancel</button>
+                <textarea id="edit-content" class="content-edit">${data.post.content}</textarea>
+                    <button id="save-edit" class="save" >Save</button>
+                    <button id="cancel-edit">Cancel</button>
                 </div>
                 
-                <p class="likes-count"> ${data.post.likes_count} likes. ${data.comments_count} replies.</p>
-                <small id="edit-time-${data.post.id}" ${data.post.modified_at !== data.post.created_at ? '' : 'style="display: none;"'}>LAST EDITED: ${data.post.modified_at}</small>
+                <p class="likes-count"> ${data.post.likes_count} likes. </p>
 
-
-                <hr>
-                <div class="tweet-actions">
+                <div class="tweet-actions ">
                     <button class="like-button" data-id="${data.post.id}" data-liked="${data.is_liked ? 'true' : 'false'}">
                     <svg viewBox="0 0 24 24" class="heart-icon">
                         <path d="M12 21.638h-.014C9.403 21.59 1.95 14.856 1.95 8.478c0-3.064 2.525-5.754 5.403-5.754 2.29 0 3.83 1.58 4.646 2.73.814-1.148 2.354-2.73 4.645-2.73 2.88 0 5.404 2.69 5.404 5.755 0 6.376-7.454 13.11-10.037 13.157H12z"/>
@@ -240,16 +239,15 @@ function viewContent (postId) {
                     </button>
                 </div>
   
-
-                <div id="comments-section" >
-              
-                        <div class="compose-view">
+                <section id="comments-section" class="comments-section">
+                    <div class="compose-view">
                         <textarea id="new-comment" class="comment-compose" placeholder="Post your reply"></textarea>
                         <button id="submit-comment" class="reply-button">Reply</button>
-                        </div>
-                    <div id="comments-list"></div>
-                </div>
+                    </div>
+                </section>
 
+                <div id="comments-list"></div>
+                    
                 `;
 
             const likeButton = content.querySelector('.like-button');
@@ -265,11 +263,12 @@ function viewContent (postId) {
             const editButton = content.querySelector('#edit-button');
             editButton.addEventListener('click', function() {
                 content.querySelector(`#content-form`).style.display = 'block';
-                content.querySelector(`#comments-section`).style.display = 'none';
-                content.querySelector(`#post-content`).style.display = 'none';
+                content.querySelector(`.comments-section`).style.display = 'none';
+                content.querySelector(`#comments-list`).style.display = 'none';
+                content.querySelector(`.post-content`).style.display = 'none';
                 content.querySelector(`.timestamp`).style.display = 'none';
                 content.querySelector(`.likes-count`).style.display = 'none';
-                content.querySelector(`.back-btn`).style.display = 'none';
+                content.querySelector(`.back-button`).style.display = 'none';
                 likeButton.style.display = 'none';
                 editButton.style.display = 'none';
             });
@@ -282,7 +281,7 @@ function viewContent (postId) {
                 viewContent(data.post.id); 
             });
 
-            const backButton = content.querySelector('.back-btn');
+            const backButton = content.querySelector('.back-button');
             backButton.addEventListener('click', function() { 
                 viewPosts('all'); 
             });
@@ -315,6 +314,7 @@ function viewContent (postId) {
 function viewFollowList (followList, currentFollowing, currentUser) {
 
     document.querySelector('.profile-view').classList.add('hidden');
+    document.querySelector ('.follow-header').style.display = 'block';
     document.querySelector('.follow-list').classList.remove('hidden');
     document.querySelector('.feed').classList.add('hidden');
 
@@ -323,12 +323,12 @@ function viewFollowList (followList, currentFollowing, currentUser) {
     followList.forEach(profile => { 
         const isFollowing = currentFollowing.some(following => following.username === profile.username);
         console.log(isFollowing);
-        const user = document.createElement('div');
+        const user = document.createElement('span');
         user.className = 'follow-card'
         user.dataset.username = profile.username;
         user.innerHTML = `
-            <a href="#" class="profile-link" data-username="${profile.username}" id="profile"><b>${profile.first_name}</b> @${profile.username}</a>
-            <button id="follow-button" class="follow-button" data-username="${profile.username}">${isFollowing ? "Unfollow" : "Follow"}</button>
+                <a href="#" class="profile-link" data-username="${profile.username}" id="profile"><b>${profile.first_name}</b> @${profile.username}</a>
+                <button id="follow-button" class="follow-button" data-username="${profile.username}">${isFollowing ? "Unfollow" : "Follow"}</button>
             `;
             const userProfile = user.querySelector ('.profile-link');
             userProfile.addEventListener('click', function(event) {
@@ -355,6 +355,7 @@ function viewProfile(username, page = 1) {
     document.querySelector('.profile').classList.remove('hidden');
     document.querySelector('.feed').classList.remove('hidden');
 
+    document.querySelector ('.follow-header').style.display = 'none';
     fetch(`/profile/${encodeURIComponent(username)}/${page}`)
         .then(response => response.json())
         .then(data => {
@@ -371,9 +372,9 @@ function viewProfile(username, page = 1) {
 
                 <p id="bio-content" class="bio-content">${data.has_bio ? data.profile.bio : 'No bio yet.'}</p>
                 
-                <div id="bio-form" style="display: none;">
-                    <textarea id="edit-bio">${data.has_bio ? data.profile.bio : 'No bio yet.'}</textarea>
-                    <button id="save-bio">Save</button>
+                <div id="bio-form" class ="bio-from" style="display: none;">
+                    <textarea id="edit-bio" class="bio-edit" >${data.has_bio ? data.profile.bio : 'No bio yet.'}</textarea>
+                    <button id="save-bio" class="save" >Save</button>
                     <button id="cancel-bio">Cancel</button>
                 </div>
             
@@ -384,11 +385,11 @@ function viewProfile(username, page = 1) {
 
                 
             `;
-            
             const followingList = document.querySelector ('#following-list');
             followingList.addEventListener('click', function(event) {
                 event.preventDefault();
                 if (data.following > 0) {
+                    document.querySelector ('.follow-header').innerHTML =` <center><h1>@${data.profile.user.username}'s Following List</h1></center><br>`;
                     viewFollowList (data.following_list, data.current_following, data.current_user);
                 }
                 });
@@ -397,9 +398,10 @@ function viewProfile(username, page = 1) {
             followerList.addEventListener('click', function(event) {
                 event.preventDefault();
                 if (data.followers > 0) {
-                viewFollowList (data.follower_list, data.current_following, data.current_user);
+                    document.querySelector ('.follow-header').innerHTML =`<center><h1>@${data.profile.user.username}'s Follower List</h1></center><br>`;
+                    viewFollowList (data.follower_list, data.current_following, data.current_user);
                 }
-            });
+            }); 
 
             const followButton = document.querySelector(`#follow-button`);
             followButton.addEventListener ('click', function() {
@@ -422,6 +424,7 @@ function viewProfile(username, page = 1) {
                 const editForm = document.querySelector(`#bio-form`);
                 const content = document.querySelector(`#bio-content`);
                 document.querySelector(`.follow-data`).style.display = 'none';
+                document.querySelector('.feed').classList.add('hidden');
                 editForm.style.display = 'block';
                 content.style.display = 'none';
                 editButton.style.display = 'none';
@@ -467,7 +470,7 @@ function loadPosts (scope, posts, isProfile) {
             <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile"><b>${entry.author.first_name}</b> @${entry.author.username}</a>
             <small class="timestamp">${entry.created_at}</small>
             <a href="#" id="content" data-id="${entry.id}" class="content-link">${entry.content}</a>
-            <p class="likes-count">${entry.likes_count} likes</p>
+            <p class="likes-count">${entry.likes_count} likes. </p>
             
             <div class="tweet-actions">
 

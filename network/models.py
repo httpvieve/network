@@ -20,7 +20,7 @@ class User (AbstractUser):
 
 class UserProfile (models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE, related_name = 'profile')
-    profile_picture = models.ImageField(upload_to = 'profile_pics', blank = True, null = True)
+    profile_picture = models.ImageField(upload_to = "profile_pictures/", blank = True, null = True)
     bio = models.TextField(blank = True)
     created_at = models.DateTimeField(auto_now_add = True)
     
@@ -38,7 +38,7 @@ class UserProfile (models.Model):
 class Post (models.Model):
     author = models.ForeignKey(User, on_delete = models.CASCADE, related_name = 'posts')
     content = models.TextField()
-    media = models.ImageField(upload_to = 'static/media/', blank = True, null = True)
+    media = models.ImageField(upload_to = "posts/", blank = True, null = True)
     created_at = models.DateTimeField(auto_now_add = True)
     modified_at = models.DateTimeField(auto_now = True)
     liked_by = models.ManyToManyField(User, related_name = 'liked_posts', blank = True)
@@ -58,7 +58,8 @@ class Post (models.Model):
             'media': self.media.url if self.media else None,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
             'modified_at': self.modified_at.strftime('%Y-%m-%d %H:%M'),
-            'likes_count': self.likes_count()
+            'likes_count': self.likes_count(),
+            
         }
 
     def __str__(self):

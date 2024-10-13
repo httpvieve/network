@@ -24,16 +24,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    const container = document.querySelector('#create-view')
+    const container = document.querySelector('#create-view');
     container.innerHTML = `
         <div id="create-post" class="create-tweet">
             <textarea id="new-post" class="tweet-compose" placeholder="What's happening?"></textarea>
+            <div class="image-upload">
+                <input type="file" id="post-image" accept="*.png" style="display: none; ">
+                <label for="post-image" class="image-upload-label">📷 Add Image</label>
+                <div id="image-preview"></div>
+            </div>
             <button id="submit-post" class="tweet-button" disabled>Post</button>
         </div>
     `;
     
-    const submit = document.getElementById('submit-post')
+    const submit = document.getElementById('submit-post');
     const newPost = document.getElementById('new-post');
+    const imageInput = document.getElementById('post-image');
+    const imagePreview = document.getElementById('image-preview');
+    let selectedImage = '';
     
     function updateSubmitButton() {
         submit.disabled = newPost.value.trim() === '';
@@ -41,18 +49,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     newPost.addEventListener('input', updateSubmitButton);
     
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 200px;">`;
+            }
+            reader.readAsDataURL(file);
+            selectedImage = file;
+        } else {
+            imagePreview.innerHTML = '';
+            selectedImage = '';
+        }
+    });
+    
     submit.addEventListener('click', (e) => {
         e.preventDefault();
         submit.disabled = true;
     
-        fetch('/posts/create', {
+        const formData = new FormData();
+        formData.append('content', newPost.value);
+        if (selectedImage) {
+            formData.append('media', selectedImage);
+        }
+    
+        fetch('/posts/create', {  // Ensure the correct URL
             method: 'POST',
-            body: JSON.stringify({ content: newPost.value })
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 newPost.value = '';
+                imagePreview.innerHTML = '';
+                selectedImage = '';
                 updateSubmitButton();
                 viewPosts('all');
             } else {
@@ -63,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submit.disabled = false;
         });
     });
-
     viewPosts('all');
 });
 
@@ -221,7 +251,8 @@ function viewContent (postId) {
 
                     
                 <p id="post-content" class="post-content" >${data.post.content} </p>
-              
+                 ${data.post.media ? `<img src="${data.post.media}" style="max-width: 100%; max-height: 200px;">` : ''}
+
                 <div id="content-form" style="display: none;">
                 <textarea id="edit-content" class="content-edit">${data.post.content}</textarea>
                     <button id="save-edit" class="save" >Save</button>
@@ -266,7 +297,7 @@ function viewContent (postId) {
                 content.querySelector(`.comments-section`).style.display = 'none';
                 content.querySelector(`#comments-list`).style.display = 'none';
                 content.querySelector(`.post-content`).style.display = 'none';
-                content.querySelector(`.timestamp`).style.display = 'none';
+                content.querySelector(`.tweet-actions`).style.display = 'none';
                 content.querySelector(`.likes-count`).style.display = 'none';
                 content.querySelector(`.back-button`).style.display = 'none';
                 likeButton.style.display = 'none';
@@ -469,7 +500,9 @@ function loadPosts (scope, posts, isProfile) {
 
             <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile"><b>${entry.author.first_name}</b> @${entry.author.username}</a>
             <small class="timestamp">${entry.created_at}</small>
-            <a href="#" id="content" data-id="${entry.id}" class="content-link">${entry.content}</a>
+            <a href="#" id="content" data-id="${entry.id}" class="content-link">${entry.content} </a>
+             ${entry.media ? `<img src="${entry.media}" style="max-width: 100%; max-height: 200px;">` : ''}
+            
             <p class="likes-count">${entry.likes_count} likes. </p>
             
             <div class="tweet-actions">

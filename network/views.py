@@ -101,16 +101,23 @@ def comment(request, post_id):
 @csrf_exempt
 @login_required 
 def create_post(request):
-    
     if request.method == 'POST':
-        data = json.loads(request.body)
-        post = Post(
-                author = request.user,
-                content = data.get("content")
-                )
-        post.save()
-        return JsonResponse({ 'success': True, 'post': post.serialize(request.user)})
+        content = request.POST.get('content')
+        image = request.FILES.get('media')
 
+        if content:
+            post = Post(
+                author=request.user,
+                content=content,
+                media=image if image else None  
+            )
+            post.save()
+
+            return JsonResponse({'success': True, 'post': post.serialize(request.user)})
+        else:
+            return JsonResponse({'success': False, 'error': 'Content is required'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @csrf_exempt
 @login_required 

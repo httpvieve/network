@@ -12,17 +12,13 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.views.decorators.http import require_http_methods
+from django.core.files import File
 MAX_POSTS = 10
 
 def index(request):
-    user = None
-    if request.method == "POST":
-        user = UserProfile.objects.get(user = request.user) 
 
-    return render(request, "network/index.html", {
-    'post_form': PostForm(),
-    'profile': ProfileForm(instance=user)
-    })
+    return render(request, "network/index.html")
 
 def login_view(request):
     if request.method == "POST":
@@ -49,6 +45,7 @@ def logout_view(request):
 
 
 def register(request):
+    default_picture = 'media/profile_pictures/default.png'
     if request.method == "POST":
         first_name = request.POST["first_name"]
         username = request.POST["username"]
@@ -66,6 +63,8 @@ def register(request):
         try:
             user = User.objects.create_user(username, email, password)
             user.first_name = first_name
+            with open(default_picture, 'rb') as file:
+                user.profile_picture.save('default.png', File(file), save=True)
             user.save()
             profile  = UserProfile(user = user)
             profile.save()
@@ -211,11 +210,13 @@ def paginate (posts, index):
     
     return entries, has_next, has_previous
 
+
 @csrf_exempt
 @login_required 
 def profile (request, username, page):
     user = User.objects.get(username = username)
     profile = UserProfile.objects.get(user = user)
+
     if request.method == "GET":         
         posts, has_next, has_previous = filter (request, username, page)
         
@@ -232,10 +233,11 @@ def profile (request, username, page):
                             'posts': [entry.serialize(request.user) for entry in posts], 
                             'page_number': page, 'has_next': has_next, 'has_previous': has_previous})
     
-    if request.method == "PUT":
-        
-        data = json.loads(request.body)
-        profile.bio = data.get('bio', profile.bio)
+    if request.method == "POST":
+        profile.bio = request.POST.get('bio', profile.bio)
+        if 'profile_picture' in request.FILES:
+            user.profile_picture = request.FILES['profile_picture']
+            user.save()
         profile.save()
         
         return JsonResponse({

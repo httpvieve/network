@@ -216,15 +216,25 @@ function editPost(postId, updatedContent) {
     .then(() => viewContent(postId))
 }
 
-function editProfile (username, page, updatedContent) {
+function editProfile (username, page, updatedContent, profilePicture) {
+
+    const data = new FormData();
+    data.append('bio', updatedContent);
+    if (profilePicture) {
+        data.append('profile_picture', profilePicture);
+    }
+
+    console.log('FormData contents:');
+    for (let [key, value] of data.entries()) {
+        console.log(key, value instanceof File ? value.name : value);
+    }
 
     fetch (`/profile/${username}/${page}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-            bio: updatedContent
-        })
+        method: 'POST',
+        body: data
     })
     .then(() => viewProfile(username))
+
 }
 
 function viewContent (postId) {
@@ -352,13 +362,17 @@ function viewFollowList (followList, currentFollowing, currentUser) {
     const container = document.querySelector ('.follow-list');
     container.innerHTML = ``;
     followList.forEach(profile => { 
+        const profilePictureURL = profile.profile_picture ? profile.profile_picture : "/media/profile_pictures/default.png";
         const isFollowing = currentFollowing.some(following => following.username === profile.username);
         console.log(isFollowing);
         const user = document.createElement('span');
         user.className = 'follow-card'
         user.dataset.username = profile.username;
         user.innerHTML = `
+        <span>
+                <img class="profile-frame" src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
                 <a href="#" class="profile-link" data-username="${profile.username}" id="profile"><b>${profile.first_name}</b> @${profile.username}</a>
+            </span>
                 <button id="follow-button" class="follow-button" data-username="${profile.username}">${isFollowing ? "Unfollow" : "Follow"}</button>
             `;
             const userProfile = user.querySelector ('.profile-link');
@@ -387,24 +401,30 @@ function viewProfile(username, page = 1) {
     document.querySelector('.feed').classList.remove('hidden');
 
     document.querySelector ('.follow-header').style.display = 'none';
+    
     fetch(`/profile/${encodeURIComponent(username)}/${page}`)
         .then(response => response.json())
         .then(data => {
-
+            const profilePictureURL = data.profile.user.profile_picture ? data.profile.user.profile_picture : "/media/profile_pictures/default.png";
             const container = document.querySelector('#profile-view');
             container.innerHTML = ''; 
             container.innerHTML = `
+
+                <img src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
                 <div class="profile-header">
                     <h1 class="profile-name"><b>${data.profile.user.first_name}</b> (@${data.profile.user.username})</h1>
                     <button id="follow-button" class="follow-button">${data.is_following ? "Unfollow" : "Follow"}</button>
                     <button id="edit-button" class="edit-button">Edit</button>
-                </div>
-                <small class="joined-date">Joined ${data.profile.created_at}</small>
+                    </div>
+                    <small class="joined-date">Joined ${data.profile.created_at}</small>
+
 
                 <p id="bio-content" class="bio-content">${data.has_bio ? data.profile.bio : 'No bio yet.'}</p>
                 
                 <div id="bio-form" class ="bio-from" style="display: none;">
-                    <textarea id="edit-bio" class="bio-edit" >${data.has_bio ? data.profile.bio : 'No bio yet.'}</textarea>
+                    <textarea id="edit-bio" class="bio-edit" >${data.has_bio ? data.profile.bio : 'No bio yet.'} </textarea>
+                    <input type="file" id="edit-profile-picture" accept="image/*">
+                    <div id="profile-picture-preview"></div><br>
                     <button id="save-bio" class="save" >Save</button>
                     <button id="cancel-bio">Cancel</button>
                 </div>
@@ -424,6 +444,7 @@ function viewProfile(username, page = 1) {
                     viewFollowList (data.following_list, data.current_following, data.current_user);
                 }
                 });
+            
 
             const followerList = document.querySelector ('#follower-list');
             followerList.addEventListener('click', function(event) {
@@ -439,10 +460,24 @@ function viewProfile(username, page = 1) {
                 followUser(data.profile.user.username, data.is_following, 'profile', null);
             })
 
-            const saveBio = document.querySelector(`#save-bio`);
-            saveBio.addEventListener('click', function() {
-                const updatedContent = document.querySelector(`#edit-bio`).value;
-                editProfile(username, page, updatedContent);
+            const saveProfile = document.querySelector(`#save-bio`);
+            const updatedBio = document.querySelector(`#edit-bio`);
+            const profilePicturePreview = document.querySelector(`#profile-picture-preview`);
+            const updatedProfilePicture = document.querySelector(`#edit-profile-picture`);
+            
+            updatedProfilePicture.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profilePicturePreview.innerHTML = `<img src="${e.target.result}" alt="Profile Picture Preview" style="max-width: 200px; max-height: 200px;">`;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        
+            saveProfile.addEventListener('click', function() {
+                editProfile(username, page, updatedBio.value, updatedProfilePicture.files[0]);
             });
             
             const cancelBio = document.querySelector(`#cancel-bio`);
@@ -459,6 +494,7 @@ function viewProfile(username, page = 1) {
                 editForm.style.display = 'block';
                 content.style.display = 'none';
                 editButton.style.display = 'none';
+
             });
             
             if (data.can_edit) { followButton.style.display = 'none'; }
@@ -495,14 +531,16 @@ function loadPosts (scope, posts, isProfile) {
         const post = document.createElement ('div'); 
         post.className = 'post-card';
         post.dataset.id = entry.id;
+        const profilePictureURL = entry.author.profile_picture ? entry.author.profile_picture : "/media/profile_pictures/default.png";
         post.innerHTML = `
         <div class="entry-card">
-
+        <span class="entry-header">
+            <img class="profile-frame" src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
             <a href="#" class="profile-link" data-username="${entry.author.username}" id="profile"><b>${entry.author.first_name}</b> @${entry.author.username}</a>
             <small class="timestamp">${entry.created_at}</small>
+        </span>
             <a href="#" id="content" data-id="${entry.id}" class="content-link">${entry.content} </a>
              ${entry.media ? `<img src="${entry.media}" style="max-width: 100%; max-height: 200px;">` : ''}
-            
             <p class="likes-count">${entry.likes_count} likes. </p>
             
             <div class="tweet-actions">

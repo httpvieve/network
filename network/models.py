@@ -1,26 +1,22 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# def resize_image(image_path, new_width, new_height):
-#     img = Image.open(image_path)
-#     img.thumbnail((new_width, new_height))
-#     img.save(image_path)
-    
 class User (AbstractUser):
 
-        following = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_following')
-        followers = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_followers')
+    following = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_following')
+    followers = models.ManyToManyField('self', symmetrical=False, blank = True, related_name='user_followers')
+    profile_picture = models.ImageField(upload_to = "profile_pictures/", blank = True, null = True)
 
-        def serialize(self):
-            return {
-                'id': self.id,
-                'username': self.username,
-                'first_name': self.first_name,
-            }
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'first_name': self.first_name,
+            'profile_picture': self.profile_picture.url if self.profile_picture else None
+        }
 
 class UserProfile (models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE, related_name = 'profile')
-    profile_picture = models.ImageField(upload_to = "profile_pictures/", blank = True, null = True)
     bio = models.TextField(blank = True)
     created_at = models.DateTimeField(auto_now_add = True)
     
@@ -28,7 +24,6 @@ class UserProfile (models.Model):
         return {
             'id': self.id,
             'user': self.user.serialize(),
-            'profile_picture': self.profile_picture.url if self.profile_picture else None,
             'bio': self.bio,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
         }
@@ -52,6 +47,7 @@ class Post (models.Model):
             'author': {
                 'username': self.author.username,
                 'first_name': self.author.first_name,
+                'profile_picture': self.author.profile_picture.url if self.author.profile_picture else None,
             },
             "is_liked": user in self.liked_by.all(),
             'content': self.content,

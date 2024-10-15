@@ -3,11 +3,15 @@ var DECREMENT = -1;
 var INCREMENT = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
-
-    document.querySelector('#followed-posts').addEventListener('click', () => viewPosts('following'));
-    document.querySelector('#all-posts').addEventListener('click', () => viewPosts('all'));
-    
+    const followedPosts = document.querySelector('#followed-posts');
+    const allPosts = document.querySelector('#all-posts');
     const profile = document.querySelectorAll('#profile');
+    const content = document.querySelectorAll('#content');
+    const container = document.querySelector('#create-view');
+
+    followedPosts.addEventListener('click', () => viewPosts('following')); 
+    allPosts.addEventListener('click', () => viewPosts('all')); 
+
     profile.forEach(profile => {
         profile.addEventListener('click', (event) => {
             event.preventDefault();
@@ -15,8 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
             viewProfile(username);
         });
     });
-
-    const content = document.querySelectorAll('#content');
+    
     content.forEach(content => {
         content.addEventListener('click', (event) => {
             event.preventDefault();
@@ -24,19 +27,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    const container = document.querySelector('#create-view');
-    container.innerHTML = `
+        container.innerHTML = `
         <div id="create-post" class="create-tweet">
-            <textarea id="new-post" class="tweet-compose" placeholder="What's happening?"></textarea>
-            <div class="image-upload">
-                <input type="file" id="post-image" accept="*.png" style="display: none; ">
-                <label for="post-image" class="image-upload-label">📷 Add Image</label>
-                <div id="image-preview"></div>
-            </div>
-            <button id="submit-post" class="tweet-button" disabled>Post</button>
+        <textarea id="new-post" class="tweet-compose" placeholder="What's happening?"></textarea>
+        <div class="image-upload">
+        <input type="file" id="post-image" accept="*.png" style="display: none; ">
+        <label for="post-image" class="image-upload-label">📷 Add Image</label>
+        <div id="image-preview"></div>
         </div>
-    `;
+        <button id="submit-post" class="tweet-button" disabled>Post</button>
+        </div>
+        `;
     
+ 
+                
     const submit = document.getElementById('submit-post');
     const newPost = document.getElementById('new-post');
     const imageInput = document.getElementById('post-image');
@@ -47,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submit.disabled = newPost.value.trim() === '';
     }
     
-    newPost.addEventListener('input', updateSubmitButton);
+    if (newPost) {newPost.addEventListener('input', updateSubmitButton);}
     
     imageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -74,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('media', selectedImage);
         }
     
-        fetch('/posts/create', {  // Ensure the correct URL
+        fetch('/posts/create', {  
             method: 'POST',
             body: formData
         })
@@ -529,7 +533,6 @@ function viewPosts(scope, page = 1) {
 
     document.querySelector('.create-view').classList.remove('hidden');
     document.querySelector('.feed').classList.remove('hidden');
-
     document.querySelector('.profile').classList.add('hidden');
     document.querySelector('.content').classList.add('hidden');
 
@@ -607,24 +610,28 @@ function loadPosts (scope, posts, isProfile) {
         container.appendChild(post);
         window.scrollTo(0, 0);
     });
-
+    const postsCount = posts.posts.length;
+    console.log(postsCount);
     const paginator = document.querySelector ('#paginator');
     paginator.innerHTML = '';
-    
-    paginatorButton (posts, scope, isProfile, 'Previous', DECREMENT, posts.has_previous);
-
-    const currentPage = document.createElement('span');
-    currentPage.textContent = `${posts.page_number}`
-    paginator.appendChild(currentPage);
-    
-    paginatorButton (posts, scope, isProfile, 'Next', INCREMENT, posts.has_next);
+    if (postsCount > 0 ){
+        paginatorButton (posts, scope, isProfile, 'previous-button', 'Prev', DECREMENT, posts.has_previous);
+        const currentPage = document.createElement('button');
+        currentPage.textContent = `PAGE ${posts.page_number}`
+        currentPage.className = 'current-page';
+        paginator.appendChild(currentPage);
+        paginatorButton (posts, scope, isProfile,'next-button', 'Next', INCREMENT, posts.has_next);
+    } else {
+        paginator.innerHTML = `<h2>No posts yet.</h2>`;
+    }
 }
 
-function paginatorButton (posts, scope, isProfile, buttonName, buttonIndex, buttonCondition) {
+function paginatorButton (posts, scope, isProfile, className, buttonName, buttonIndex, buttonCondition) {
 
     if (buttonCondition) {
         const button = document.createElement ('button');
         button.textContent = buttonName;
+        button.className = className;
         button.addEventListener ('click', () => {
             if (isProfile) { viewProfile(scope, posts.page_number + buttonIndex) } 
             else {viewPosts (scope, posts.page_number + buttonIndex)}

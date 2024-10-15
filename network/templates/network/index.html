@@ -2,22 +2,51 @@
 {% load static %}
 {% block body %}
 
+{% if not user.is_authenticated %}
+    <style>
+        #followed-posts, #create-view, .login, .register, .tweet-actions {
+            display: none;
+        }
+        .profile-link, .content-link {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+    <section class="py-24 flex min-h-screen justify-center bg-white">
+        <div class="mx-auto max-w-[43rem]">
+          <div class="text-center">
+            <p class="text-lg font-medium leading-8 text-indigo-600/95">Yet another Social Network platform</p>
+            <h1 class="mt-3 text-[3rem] font-bold leading-[4rem] tracking-tight text-black">Where Every Voice Matters!</h1>
+            <p class="mt-3 text-lg leading-relaxed text-slate-400">  Transform fleeting ideas into lasting impressions. Chime in and be part of the dialogue that shapes our world! </p>
+          </div>
+      
+          <div class="mt-6 flex items-center justify-center gap-4">
+            <a href="{% url 'login' %}" class="transform rounded-md bg-indigo-600/95 px-5 py-3 font-medium text-white transition-colors hover:bg-indigo-700">Login</a>
+            <a href="{% url 'register' %}" class="transform rounded-md border border-slate-200 px-5 py-3 font-medium text-slate-900 transition-colors hover:bg-slate-50"> Register </a>
+          </div>
+        </div>
+      </section>
+    
+{% endif %}
+
 <section class="profile">
     <div id="profile-view" class="profile-view"></div>
     <div class="follow-header"></div>
     <div id="follow-list" class="follow-list"></div>
 </section>
 
+<section class="feed">
+    <div id="create-view" class="create-view"></div>
+    <div id="posts-view" ></div>
+    <div id="paginator" class="paginator"> </div> 
+</section> 
+
 <section class="content">
     <div id="content-view"></div>
     <div id="comments-view"></div>
 </section>
 
-<section class="feed">
-    <div id="create-view" class="create-view"></div>
-    <div id="posts-view" ></div>
-    <div id="paginator"></div> 
-</section> 
+
 
 <script src="{% static 'network/component.js' %}"></script>
 

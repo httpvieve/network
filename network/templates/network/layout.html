@@ -6,18 +6,28 @@
         <title>{% block title %}Social Network{% endblock %}</title>
         {% comment %} <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"> {% endcomment %}
         <link href="{% static 'network/styles.css' %}" rel="stylesheet">
-        <link href="{% static 'network/output.css' %}" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
         {% comment %} <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script> {% endcomment %}
-        <script src="{% static 'network/component.js' %}"></script>
+        {% comment %} <script src="{% static 'network/component.js' %}"></script> {% endcomment %}
 
     </head>
     <body>
-        
+        {% if not user.is_authenticated %}
+        <style>
+            #followed-posts, #create-view,.post-tab, .tweet-actions {
+                display: none;
+            }
+            .profile-link, .content-link {
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+        </style>
+        {% endif %}
 <nav class="navigation bg-white border-gray-200 dark:bg-gray-900">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
     <a href="https://cs50.harvard.edu/web/2020/projects/4/network/" class="flex items-center space-x-3 rtl:space-x-reverse">
-        <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" class="h-8" alt="Flowbite Logo" />
-        <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">CS50W Network</span>
+        {% comment %} <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" class="h-8" alt="Flowbite Logo" /> {% endcomment %}
+        <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Chime In!</span>
     </a>
     <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
         <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
@@ -30,24 +40,22 @@
             </li>
             {% else %}
             <li>
-                <a href="{% url 'login' %}" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"><b> Log In </b></a>
+                <a href="{% url 'login' %}" class="login block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"><b> Log In </b></a>
             </li>
             <li>
-                <a href="{% url 'register' %}" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"> Register </a>
+                <a href="{% url 'register' %}" class="register block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"> Register </a>
             </li>
             {% endif %}
           </ul>
     </div>
-    <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
+    <div class="post-tab items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
       <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-        {% if user.is_authenticated %}
-        <li>
-          <button id="all-posts" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">All posts</button>
-        </li>
-        <li>
-          <button id="followed-posts" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Followings</button>
-        </li>
-        {% endif %}
+          <li>
+              <button id="all-posts" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">All posts</button>
+            </li>
+            <li>
+                <button id="followed-posts" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Followings</button>
+            </li>
       </ul>
     </div>
     </div>
@@ -58,6 +66,5 @@
             
             {% endblock %}
         </div>
-
     </body>
 </html>

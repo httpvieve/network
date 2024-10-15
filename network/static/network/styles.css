@@ -47,7 +47,7 @@ body {
   max-width: 800px;
   margin: 0 auto;
 }
-.feed.hidden, .content.hidden, .create-view.hidden, .profile-view.hidden, .follow-list.hidden {
+.feed.hidden, .content.hidden, .create-view.hidden, .profile-hidden, .profile-view.hidden, .follow-list.hidden {
   display: none;
 }
 .follow-card {
@@ -61,7 +61,23 @@ body {
   align-items: center;
   padding-bottom: 10px;
 }
+.current-page, .next-button, .previous-button {
+  padding: 10px 15px;
+}
 
+.next-button, .previous-button {
+  border: 2px solid var(--black);
+  background-color: var(--extra-light-gray);
+}
+.next-button:hover, .previous-button:hover {
+  background-color: var(--light-gray);
+}
+.paginator {
+  margin: var(--margin-s);
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
 /** CARD CONTAINERS **/
 .entry-card, .follow-card {
   border: 1px solid #e6ecf0;

@@ -1,19 +1,16 @@
-from datetime import time
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.core.files import File
+from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
+from django.http import HttpResponseRedirect,  JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from .models import *
-from .forms import *
-from django.db import IntegrityError
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from django.views.decorators.http import require_http_methods
-from django.core.files import File
+
+from .models import *
+from .forms import *
 MAX_POSTS = 10
 
 def index(request):
@@ -189,7 +186,6 @@ def filter (request, scope, page):
     posts, has_next, has_previous = paginate (entries, page)
     return posts, has_next, has_previous
 
-@login_required 
 def posts(request, scope, page):
     
     posts, has_next, has_previous = filter (request, scope, page)

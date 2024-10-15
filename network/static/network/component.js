@@ -269,7 +269,7 @@ function viewContent (postId) {
                     <button id="cancel-edit">Cancel</button>
                 </div>
                 
-                <p class="likes-count"> ${data.post.likes_count} likes. </p>
+                <p class="likes-count"> ${data.post.likes_count} likes. </p><br>
 
                 <div class="tweet-actions ">
                     <button class="like-button" data-id="${data.post.id}" data-liked="${data.is_liked ? 'true' : 'false'}">
@@ -278,14 +278,14 @@ function viewContent (postId) {
                     </svg>
                     <span>${data.is_liked ? 'Unlike' : 'Like'}</span>
                     </button>
-                </div>
+                </div><br>
   
                 <section id="comments-section" class="comments-section">
                     <div class="compose-view">
                         <textarea id="new-comment" class="comment-compose" placeholder="Post your reply"></textarea>
                         <button id="submit-comment" class="reply-button">Reply</button>
                     </div>
-                </section>
+                </section><br>
 
                 <div id="comments-list"></div>
                     
@@ -391,7 +391,7 @@ function viewFollowList (followList, currentFollowing, currentUser) {
     
 }
 function viewProfile(username, page = 1) {
-
+    window.scrollTo(0, 0);
     document.querySelector('.content').classList.add('hidden');
     document.querySelector('.create-view').classList.add('hidden');
     document.querySelector('.follow-list').classList.add('hidden');
@@ -405,65 +405,88 @@ function viewProfile(username, page = 1) {
     fetch(`/profile/${encodeURIComponent(username)}/${page}`)
         .then(response => response.json())
         .then(data => {
+            const postsCount = data.posts.length;
             const profilePictureURL = data.profile.user.profile_picture ? data.profile.user.profile_picture : "/media/profile_pictures/default.png";
             const container = document.querySelector('#profile-view');
+            
+            const joinedDate = new Date(data.profile.created_at);
+            const formattedDate = joinedDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
             container.innerHTML = ''; 
             container.innerHTML = `
 
-                <img src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
-                <div class="profile-header">
-                    <h1 class="profile-name"><b>${data.profile.user.first_name}</b> (@${data.profile.user.username})</h1>
-                    <button id="follow-button" class="follow-button">${data.is_following ? "Unfollow" : "Follow"}</button>
-                    <button id="edit-button" class="edit-button">Edit</button>
-                    </div>
-                    <small class="joined-date">Joined ${data.profile.created_at}</small>
-
-
-                <p id="bio-content" class="bio-content">${data.has_bio ? data.profile.bio : 'No bio yet.'}</p>
-                
-                <div id="bio-form" class ="bio-from" style="display: none;">
-                    <textarea id="edit-bio" class="bio-edit" >${data.has_bio ? data.profile.bio : 'No bio yet.'} </textarea>
-                    <input type="file" id="edit-profile-picture" accept="image/*">
-                    <div id="profile-picture-preview"></div><br>
-                    <button id="save-bio" class="save" >Save</button>
-                    <button id="cancel-bio">Cancel</button>
+            <header class="profile-header"><a href="#" id="back-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+                </svg></a>
+                <div>
+                    <h1> ${data.profile.user.first_name} </h1>
+                    <p class="posts-count"> ${postsCount} posts</p>
                 </div>
+            </header>
             
-                <span class="follow-data"> 
-                    <a id="following-list" href="#">${data.following} following.</a> 
-                    <a id="follower-list" href="#">${data.followers} followers.</a>
-                </span>
+            <div class="cover-photo"></div> 
 
-                
+            <div class="profile-container">
+            <img src="${profilePictureURL}" class="profile-picture" alt="@${data.profile.user.username}'s profile picture" >
+            <button id="follow-button" class="follow-button">${data.is_following ? "Unfollow" : "Follow"}</button>
+            <button id="edit-button" class="edit-button" > Edit </button>
+                <div class="profile-info">
+                        <h2 class="profile-name"> ${data.profile.user.first_name} </h2> 
+                        <p class="profile-handle"> @${data.profile.user.username} </p>
+                        <p class="profile-bio">${data.has_bio ? data.profile.bio : 'No bio yet.'}</p>
+                    <div class="profile-meta">
+                        <div> 📍 white space </div>
+                        <div> 🔗<a href="https://cs50.harvard.edu/">https://cs50.harvard.edu/</a> </div>
+                        <div> 📆 Joined ${formattedDate} </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div><span class="stat-value"><a id="following-list" href="#"> ${data.following} </a></span><span class="stat-label"> Following</span></div>
+                        <div><span class="stat-value"><a id="follower-list" href="#">${data.followers} </a></span><span class="stat-label"> Followers</span></div>
+                    </div>
+                </div>
+            </div>
+                    
+            <div id="bio-form" class ="bio-from" style="display: none;">
+                <textarea id="edit-bio" class="bio-edit" >${data.has_bio ? data.profile.bio : 'No bio yet.'} </textarea>
+                <input type="file" id="edit-profile-picture" accept="image/*">
+                <div id="profile-picture-preview"></div><br>
+                <button id="save-bio" class="save" >Save</button>
+                <button id="cancel-bio">Cancel</button>
+            </div>    
             `;
-            const followingList = document.querySelector ('#following-list');
+            const backButton = container.querySelector(`#back-button`);
+            backButton.addEventListener('click', function() { 
+                viewPosts('all'); 
+            });
+            const followingList = container.querySelector (`#following-list`);
             followingList.addEventListener('click', function(event) {
                 event.preventDefault();
                 if (data.following > 0) {
-                    document.querySelector ('.follow-header').innerHTML =` <center><h1>@${data.profile.user.username}'s Following List</h1></center><br>`;
+                    document.querySelector('.follow-header').innerHTML =` <center><h1>@${data.profile.user.username}'s Following List</h1></center><br>`;
                     viewFollowList (data.following_list, data.current_following, data.current_user);
                 }
                 });
             
-
-            const followerList = document.querySelector ('#follower-list');
+            const followerList = container.querySelector(`#follower-list`);
             followerList.addEventListener('click', function(event) {
                 event.preventDefault();
                 if (data.followers > 0) {
-                    document.querySelector ('.follow-header').innerHTML =`<center><h1>@${data.profile.user.username}'s Follower List</h1></center><br>`;
+                    document.querySelector('.follow-header').innerHTML =`<center><h1>@${data.profile.user.username}'s Follower List</h1></center><br>`;
                     viewFollowList (data.follower_list, data.current_following, data.current_user);
                 }
             }); 
 
-            const followButton = document.querySelector(`#follow-button`);
+            const followButton = container.querySelector(`#follow-button`);
             followButton.addEventListener ('click', function() {
                 followUser(data.profile.user.username, data.is_following, 'profile', null);
             })
 
-            const saveProfile = document.querySelector(`#save-bio`);
-            const updatedBio = document.querySelector(`#edit-bio`);
-            const profilePicturePreview = document.querySelector(`#profile-picture-preview`);
-            const updatedProfilePicture = document.querySelector(`#edit-profile-picture`);
+            const saveProfile = container.querySelector(`#save-bio`);
+            const updatedBio = container.querySelector(`#edit-bio`);
+            const profilePicturePreview = container.querySelector(`#profile-picture-preview`);
+            const updatedProfilePicture = container.querySelector(`#edit-profile-picture`);
             
             updatedProfilePicture.addEventListener('change', function(event) {
                 const file = event.target.files[0];
@@ -480,19 +503,17 @@ function viewProfile(username, page = 1) {
                 editProfile(username, page, updatedBio.value, updatedProfilePicture.files[0]);
             });
             
-            const cancelBio = document.querySelector(`#cancel-bio`);
+            const cancelBio = container.querySelector(`#cancel-bio`);
             cancelBio.addEventListener('click', function() {
                 viewProfile(data.profile.user.username);
             });
 
-            const editButton = document.querySelector(`#edit-button`);
+            const editButton = container.querySelector(`#edit-button`);
             editButton.addEventListener('click', function() {
-                const editForm = document.querySelector(`#bio-form`);
-                const content = document.querySelector(`#bio-content`);
-                document.querySelector(`.follow-data`).style.display = 'none';
+                const editForm = container.querySelector(`#bio-form`);
+                document.querySelector(`.profile-stats`).style.display = 'none';
                 document.querySelector('.feed').classList.add('hidden');
                 editForm.style.display = 'block';
-                content.style.display = 'none';
                 editButton.style.display = 'none';
 
             });

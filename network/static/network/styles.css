@@ -4,17 +4,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 :root {
-
-  
-  /* colors */
+  /* COLORS */
   --red: #F91880;
   --blue: hsl(203, 89%, 53%);
   --black: hsl(210, 13%, 9%);
   --dark-gray: hsl(207, 14%, 46%);
   --light-gray: hsl(205, 25%, 91%);
   --extra-light-gray: hsl(204, 33%, 97%);
-  --white: hsl(0, 0%, 90) ;
-  
+  --white: hsl(0, 0%, 90);
+
+  /* MARGINS */
   --margin-xxs: 0.25rem;
   --margin-xs: 0.50rem;
   --margin-s: 0.75rem;
@@ -24,15 +23,12 @@
   --margin-xxl: 2.25rem
 }
 
-
-body {
-  font: 300 16px/1.5 "Open Sans", sans-serif;
-}
+body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 
 /** PAGE CONTAINERS **/
+
 .create-view, .comments-section {
   padding-bottom: var(--margin-xxs);
-  margin: var(--margin-m) 0 var(--margin-m) 0;
   border: 1px solid #cfd9de;
   border-radius: 16px; 
   display: flex;
@@ -40,20 +36,20 @@ body {
   margin: 0 auto;
 }
 
-.create-tweet, .compose-view {
-  padding: 12px 16px;
-}
+.create-tweet, .compose-view { padding: 12px 16px; }
+
 .feed, .content {
   max-width: 800px;
   margin: 0 auto;
 }
-.feed.hidden, .content.hidden, .create-view.hidden, .profile-hidden, .profile-view.hidden, .follow-list.hidden {
-  display: none;
-}
+
+.feed.hidden, .content.hidden, .create-view.hidden, .profile-hidden, .profile-view.hidden, .follow-list.hidden { display: none; }
+
 .follow-card {
   display: inline-flex;
   justify-content:center;
 }
+
 .entry-header {
   display: flex;
   gap: var(--margin-xs);
@@ -61,39 +57,41 @@ body {
   align-items: center;
   padding-bottom: 10px;
 }
-.current-page, .next-button, .previous-button {
-  padding: 10px 15px;
-}
+
+.current-page, .next-button, .previous-button { padding: 10px 15px; }
 
 .next-button, .previous-button {
   border: 2px solid var(--black);
   background-color: var(--extra-light-gray);
 }
-.next-button:hover, .previous-button:hover {
-  background-color: var(--light-gray);
-}
+
+.next-button:hover, .previous-button:hover { background-color: var(--light-gray); }
+
 .paginator {
   margin: var(--margin-s);
   align-items: center;
   display: flex;
   justify-content: center;
 }
+
 /** CARD CONTAINERS **/
+
 .entry-card, .follow-card {
   border: 1px solid #e6ecf0;
   padding: 12px 16px;
   max-width: 800px;
   transition: background-color 0.2s;
 }
+
 .comment {
   border-bottom: 1px solid var(--light-gray);
   padding: 12px 16px;
   min-width: 800px;
   transition: background-color 0.2s;
 }
-.entry-card:hover, .follow-card:hover{
-  background-color: #f7f7f7;
-}
+
+.entry-card:hover, .follow-card:hover{ background-color: #f7f7f7; }
+
 /** FORMS **/
 
 .bio-edit,  .content-edit {
@@ -105,17 +103,14 @@ body {
   font-size: 15px;
   margin-bottom: 10px;
 } 
-.content-edit {
-  margin-top: 10px;
-}
-.comment-compose {
-  max-height: 20px;
-}
-.tweet-compose {
-  min-height: 60px;
-}
+
+.content-edit { margin-top: 10px; }
+
+.comment-compose { max-height: 20px; }
+
+.tweet-compose { min-height: 60px; }
+
 .tweet-compose, .comment-compose {
-  
   min-width: 700px ;
   border: none;
   resize: none;
@@ -124,37 +119,38 @@ body {
   margin-bottom: 12px;
   overflow: hidden; 
 }
-.save {
-   margin-right: 10px;
-}
-.tweet-compose:focus, .comment-compose:focus {
-  outline: none;
-}
 
-.tweet-compose::placeholder, .comment-compose::placeholder {
-  color: var(--dark-gray);
-}
+.save { margin-right: 10px; }
 
+.tweet-compose:focus, .comment-compose:focus { outline: none; }
 
+.tweet-compose::placeholder, .comment-compose::placeholder { color: var(--dark-gray); }
 
 /** LINKS **/
+
 .image-upload-label {
   cursor: pointer;
 }
+
 .posts-count {
   margin-left: 30px;
 }
+
 .profile-header {
   display: flex;
   align-items: center;
   padding: 10px 15px;
 }
+
 .profile-header h1 { font-size: 20px; margin-left: 30px;}
+
 .profile-header p { font-size: 13px; color: #71767b; }
+
 .profile-container {
   padding: 15px;
   position: relative;
 }
+
 .profile-picture {
   width: 133px;
   height: 133px;
@@ -163,21 +159,26 @@ body {
   position: absolute;
   top: -70px;
 }
+
 .profile-view {
   max-width: 800px;
   margin: 0 auto;
   line-height: 1.5;
-
 }
 
 .cover-photo {
   height: 200px;
   background-color: var(--dark-gray);
 }
+
 .profile-info { margin-top: 50px; }
+
 .profile-name { font-size: 20px; font-weight: bold; }
+
 .profile-handle { font-size: 15px; color: var(--dark-gray); }
-.profile-bio { margin-top: 20px;}
+
+.profile-bio { margin-top: 20px; }
+
 .profile-meta {
   display: flex;
   flex-wrap: wrap;
@@ -185,22 +186,22 @@ body {
   font-size: 15px;
   color: var(--dark-gray);
 }
+
 .profile-meta > div { margin-right: 15px; }
+
 .profile-stats {
   display: flex;
   margin-top: 15px;
 }
+
 .profile-stats > div { margin-right: 20px; }
 
-.stat-value{
-  font-weight: bold;
-}
-.stat-label{
-  color: #71767b;
-}
-.post-date {
-  margin-left: 10px;
-}
+.stat-value { font-weight: bold; }
+
+.stat-label{ color: #71767b; }
+
+.post-date { margin-left: 10px; }
+
 .profile-link b {
   color: var(--black);
   font-size: 17px;
@@ -208,9 +209,7 @@ body {
   text-decoration: none;
 }
 
-.profile-link {
-  color: var(--dark-gray);
-}
+.profile-link { color: var(--dark-gray); }
 
 .timestamp {
   color: var(--dark-gray);
@@ -232,14 +231,13 @@ body {
 
 /** BUTTONS **/
 
-.tweet-button:hover, .reply-button:hover {
-  background-color: var(--blue);
-}
+.tweet-button:hover, .reply-button:hover { background-color: var(--blue); }
 
 .tweet-button:disabled, .reply-button:disabled, .save-button:disabled {
   opacity: 0.5;
   cursor: default;
 }
+
 .tweet-actions, .comments-section {
   display: flex;
   justify-content: flex-start;
@@ -258,18 +256,14 @@ body {
   display: flex;
   align-items: center;
 }
-.back-button {
-  margin-bottom: var(--margin-m);
-}
-.back-button:hover  {
-  color: var(--black);
-}
-.comment-button:hover {
-  color: var(--dark-gray);
-}
-.like-button:hover {
-  color: var(--blue);
-}
+
+.back-button { margin-bottom: var(--margin-m); }
+
+.back-button:hover { color: var(--black); }
+
+.comment-button:hover { color: var(--dark-gray); }
+
+.like-button:hover { color: var(--blue); }
 
 .heart-icon, .comment-icon {
   width: 18px;
@@ -278,12 +272,9 @@ body {
   fill: currentColor;
 }
 
-.like-button:hover .heart-icon {
-  fill: var(--red);
-}
-.like-button[data-liked="true"] {
-  color: var(--red);
-}
+.like-button:hover .heart-icon { fill: var(--red); }
+
+.like-button[data-liked="true"] { color: var(--red); }
 
 .tweet-button, .reply-button {
   background-color: var(--blue);
@@ -302,9 +293,7 @@ body {
   cursor: pointer;
   outline: none;
 }
-.follow-button, .edit-button {
-  float:right;
-}
+.follow-button, .edit-button { float:right; }
 .follow-button, .save {
   background-color: var(--black);
   border: 1px solid var(--black);
@@ -320,31 +309,23 @@ body {
   outline: none;
 }
 
-.follow-button:hover, .save:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-}
+.follow-button:hover, .save:hover { background-color: rgba(0, 0, 0, 0.8); }
 
-
-.comment-button:hover .comment-icon {
-  fill: #1da1f2;
-}
-
+.comment-button:hover .comment-icon { fill: #1da1f2; }
 
 /** PROFILE DATA **/
 
 .content-card, .follow-list{
-
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
- .content-header, .follow-card{
+.content-header, .follow-card{
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 
 .joined-date {
   color: #536471;
@@ -359,12 +340,10 @@ body {
   margin-bottom: 15px;
 }
 
-.follow-data {
-  color: #536471;
-}
-.follow-card {
-  height: 70px;
-}
+.follow-data { color: #536471; }
+
+.follow-card { height: 70px; }
+
 .likes-count {
   color: #657786;
   font-size: 15px;

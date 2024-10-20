@@ -128,12 +128,16 @@ function viewComments(postId) {
       commentsList.innerHTML = `${commentCount} replies.`;
       data.comments.forEach(comment => {
         const commentElement = document.createElement('div');
+        const profilePictureURL = comment.author.profile_picture ? comment.author.profile_picture : "/media/profile_pictures/default.png";
         commentElement.className = 'comment';
         commentElement.innerHTML = `
-                    <a href="#" data-username="${comment.author.username}" class="profile-link"  id="profile"> <b>${comment.author.first_name}</b> @${comment.author.username}</a> 
-                    <small class="timestamp">${comment.created_at}</small>
-                    <p>${comment.content}</p>
-                `;
+          <span class="entry-header">
+            <img class="profile-frame" src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
+            <a href="#" data-username="${comment.author.username}" class="profile-link"  id="profile"> <b>${comment.author.first_name}</b> @${comment.author.username}</a> 
+            <small class="timestamp">${comment.created_at}</small>
+          </span>
+          <p>${comment.content}</p>
+         `;
 
         const profile = commentElement.querySelector('.profile-link');
         profile.addEventListener('click', function (event) {
@@ -251,13 +255,17 @@ function viewContent(postId) {
   fetch(`/post/${postId}`)
     .then(response => response.json())
     .then(data => {
+      const profilePictureURL = data.post.author.profile_picture ? data.post.author.profile_picture : "/media/profile_pictures/default.png";
       const content = document.createElement('div');
       content.className = 'content-card';
       content.innerHTML = `
                 <button id="back-to-posts" class="back-button" >Back to Posts</button>
                 <div class="content-header">
-                   <span> <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile"> <b>${data.post.author.first_name} </b> @${data.post.author.username} </a>
-                    <small class="post-date">${data.post.created_at}</small></span>
+                <span class="entry-header">
+                  <img class="profile-frame" src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
+                  <a href="#" class="profile-link" data-username="${data.post.author.username}" id="profile"> <b>${data.post.author.first_name} </b> @${data.post.author.username} </a>
+                  <small class="post-date">${data.post.created_at}</small>
+                </span>
                     <button id="follow-button" class="follow-button">${data.is_following ? "Unfollow" : "Follow"}</button>
                     <button id="edit-button">Edit</button>
                  </div> 

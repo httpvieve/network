@@ -1,10 +1,7 @@
-
 from django.urls import path
-
 from . import views
 
 urlpatterns = [
-    
     path("", views.index, name="index"),
     path("login", views.login_view, name="login"),
     path("logout", views.logout_view, name="logout"),
@@ -18,4 +15,5 @@ urlpatterns = [
     path("posts/<str:scope>/<int:page>", views.posts, name="posts"),
     path("profile/<str:username>/follow", views.follow_user, name="follow"),
     path("profile/<str:username>/<int:page>", views.profile, name="profile")
+
 ] 

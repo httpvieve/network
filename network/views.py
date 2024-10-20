@@ -10,11 +10,11 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from .models import *
-from .forms import *
+
 MAX_POSTS = 10
 
 def index(request):
-
+    
     return render(request, "network/index.html")
 
 def login_view(request):

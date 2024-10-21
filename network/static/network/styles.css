@@ -58,6 +58,10 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   padding-bottom: 10px;
 }
 
+.layout-header {
+  border: 2px solid blue;
+}
+
 .current-page, .next-button, .previous-button { padding: 10px 15px; }
 
 .next-button, .previous-button {

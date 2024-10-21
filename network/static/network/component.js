@@ -250,6 +250,7 @@ function viewContent(postId) {
   document.querySelector('.feed').classList.add('hidden');
   document.querySelector('.profile').classList.add('hidden');
   document.querySelector('.content').classList.remove('hidden');
+  document.querySelector('.post-tab').style.display = 'none';
   const container = document.querySelector('#content-view');
   container.innerHTML = '';
   fetch(`/post/${postId}`)
@@ -373,6 +374,7 @@ function viewFollowList(followList, currentFollowing, currentUser) {
 
   const container = document.querySelector('.follow-list');
   container.innerHTML = ``;
+  container.innerHTML = `<a href="" class="back-button">Back to account</a>`
   followList.forEach(profile => {
     const profilePictureURL = profile.profile_picture ? profile.profile_picture : "/media/profile_pictures/default.png";
     const isFollowing = currentFollowing.some(following => following.username === profile.username);
@@ -381,12 +383,19 @@ function viewFollowList(followList, currentFollowing, currentUser) {
     user.className = 'follow-card'
     user.dataset.username = profile.username;
     user.innerHTML = `
-        <span>
-                <img class="profile-frame" src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
-                <a href="#" class="profile-link" data-username="${profile.username}" id="profile"><b>${profile.first_name}</b> @${profile.username}</a>
-            </span>
-                <button id="follow-button" class="follow-button" data-username="${profile.username}">${isFollowing ? "Unfollow" : "Follow"}</button>
-            `;
+      <span class="entry-header">
+        <img class="profile-frame" src="${profilePictureURL}" style="max-width: 100%; border-radius: 50%; max-height: 30px;">
+        <a href="#" class="profile-link" data-username="${profile.username}" id="profile"><b>${profile.first_name}</b> @${profile.username}</a>
+      </span>
+      <button id="follow-button" class="follow-button" data-username="${profile.username}">${isFollowing ? "Unfollow" : "Follow"}</button>
+      `;
+
+    const backButton = container.querySelector('.back-button');
+    backButton.addEventListener('click', function (event) {
+      event.preventDefault();
+      viewProfile(currentUser);
+    });
+
     const userProfile = user.querySelector('.profile-link');
     userProfile.addEventListener('click', function (event) {
       event.preventDefault();
@@ -413,6 +422,7 @@ function viewProfile(username, page = 1) {
   document.querySelector('.feed').classList.remove('hidden');
 
   document.querySelector('.follow-header').style.display = 'none';
+  document.querySelector('.post-tab').style.display = 'none';
 
   fetch(`/profile/${encodeURIComponent(username)}/${page}`)
     .then(response => response.json())
@@ -476,7 +486,7 @@ function viewProfile(username, page = 1) {
       followingList.addEventListener('click', function (event) {
         event.preventDefault();
         if (data.following > 0) {
-          document.querySelector('.follow-header').innerHTML = ` <center><h1>@${data.profile.user.username}'s Following List</h1></center><br>`;
+          document.querySelector('.follow-header').innerHTML = `<br><center><h1>@${data.profile.user.username}'s Following List</h1></center><br>`;
           viewFollowList(data.following_list, data.current_following, data.current_user);
         }
       });
@@ -485,7 +495,7 @@ function viewProfile(username, page = 1) {
       followerList.addEventListener('click', function (event) {
         event.preventDefault();
         if (data.followers > 0) {
-          document.querySelector('.follow-header').innerHTML = `<center><h1>@${data.profile.user.username}'s Follower List</h1></center><br>`;
+          document.querySelector('.follow-header').innerHTML = `<br><center><h1>@${data.profile.user.username}'s Follower List</h1></center><br>`;
           viewFollowList(data.follower_list, data.current_following, data.current_user);
         }
       });
@@ -539,6 +549,7 @@ function viewProfile(username, page = 1) {
 
 function viewPosts(scope, page = 1) {
 
+  document.querySelector('.post-tab').style.display = 'block';
   document.querySelector('.create-view').classList.remove('hidden');
   document.querySelector('.feed').classList.remove('hidden');
   document.querySelector('.profile').classList.add('hidden');

@@ -42,7 +42,7 @@ def logout_view(request):
 
 
 def register(request):
-    default_picture = 'media/profile_pictures/default.png'
+    default_picture_path = 'profile_pictures/default.png'
     if request.method == "POST":
         first_name = request.POST["first_name"]
         username = request.POST["username"]
@@ -60,10 +60,9 @@ def register(request):
         try:
             user = User.objects.create_user(username, email, password)
             user.first_name = first_name
-            with open(default_picture, 'rb') as file:
-                user.profile_picture.save('default.png', File(file), save=True)
+            user.profile_picture = default_picture_path
             user.save()
-            profile  = UserProfile(user = user)
+            profile = UserProfile(user = user)
             profile.save()
         except IntegrityError:
             return render(request, "network/register.html", {

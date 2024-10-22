@@ -232,11 +232,6 @@ function editProfile(username, page, updatedContent, profilePicture) {
     data.append('profile_picture', profilePicture);
   }
 
-  console.log('FormData contents:');
-  for (let [key, value] of data.entries()) {
-    console.log(key, value instanceof File ? value.name : value);
-  }
-
   fetch(`/profile/${username}/${page}`, {
     method: 'POST',
     body: data
@@ -378,7 +373,6 @@ function viewFollowList(followList, currentFollowing, currentUser) {
   followList.forEach(profile => {
     const profilePictureURL = profile.profile_picture ? profile.profile_picture : "/media/profile_pictures/default.png";
     const isFollowing = currentFollowing.some(following => following.username === profile.username);
-    console.log(isFollowing);
     const user = document.createElement('span');
     user.className = 'follow-card'
     user.dataset.username = profile.username;
@@ -630,7 +624,6 @@ function loadPosts(scope, posts, isProfile) {
     window.scrollTo(0, 0);
   });
   const postsCount = posts.posts.length;
-  console.log(postsCount);
   const paginator = document.querySelector('#paginator');
   paginator.innerHTML = '';
   if (postsCount > 0) {

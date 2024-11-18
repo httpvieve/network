@@ -37,8 +37,14 @@ if ENVIRONMENT == "development":
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    'localhost:8000',
+    'chime.up.railway.app',
+    '127.0.0.1'
+]
 
+CSRF_TRUSTED_ORIGINS = ['https://chime.up.railway.app']
 # Application definition
 
 INSTALLED_APPS = [
@@ -54,6 +60,8 @@ INSTALLED_APPS = [
 TAILWIND_APP_NAME = "theme"
 INTERNAL_IPS = {
     "127.0.0.1",
+    'localhost',
+    'localhost:8000'
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

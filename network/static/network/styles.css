@@ -1,3 +1,5 @@
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,6 +33,8 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   padding-bottom: var(--margin-xxs);
   border: 1px solid #cfd9de;
   border-radius: 16px; 
+  display: -webkit-box; 
+  display: -ms-flexbox; 
   display: flex;
   max-width: 740px;
   margin: 0 auto;
@@ -46,15 +50,25 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 .feed.hidden, .content.hidden, .create-view.hidden, .profile-hidden, .profile-view.hidden, .follow-list.hidden { display: none; }
 
 .follow-card {
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
   display: inline-flex;
-  justify-content:center;
+  -webkit-box-pack:center;
+      -ms-flex-pack:center;
+          justify-content:center;
 }
 
 .entry-header {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   gap: var(--margin-xs);
-  justify-content:flex-start;
-  align-items: center;
+  -webkit-box-pack:start;
+      -ms-flex-pack:start;
+          justify-content:flex-start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
   padding-bottom: 10px;
 }
 
@@ -73,9 +87,15 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 
 .paginator {
   margin: var(--margin-s);
-  align-items: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 
 /** CARD CONTAINERS **/
@@ -84,6 +104,8 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   border: 1px solid #e6ecf0;
   padding: 12px 16px;
   max-width: 800px;
+  -webkit-transition: background-color 0.2s;
+  -o-transition: background-color 0.2s;
   transition: background-color 0.2s;
 }
 
@@ -91,6 +113,8 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   border-bottom: 1px solid var(--light-gray);
   padding: 12px 16px;
   min-width: 800px;
+  -webkit-transition: background-color 0.2s;
+  -o-transition: background-color 0.2s;
   transition: background-color 0.2s;
 }
 
@@ -128,9 +152,15 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 
 .tweet-compose:focus, .comment-compose:focus { outline: none; }
 
-.tweet-compose::placeholder, .comment-compose::placeholder { color: var(--dark-gray); }
+.tweet-compose::-webkit-input-placeholder, .comment-compose::-webkit-input-placeholder { color: var(--dark-gray); }
 
-/** LINKS **/
+.tweet-compose::-moz-placeholder, .comment-compose::-moz-placeholder { color: var(--dark-gray); }
+
+.tweet-compose:-ms-input-placeholder, .comment-compose:-ms-input-placeholder { color: var(--dark-gray); }
+
+.tweet-compose::-ms-input-placeholder, .comment-compose::-ms-input-placeholder { color: var(--dark-gray); }
+
+.tweet-compose::placeholder, .comment-compose::placeholder { color: var(--dark-gray); }
 
 .image-upload-label {
   cursor: pointer;
@@ -141,8 +171,12 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 }
 
 .profile-header {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
   padding: 10px 15px;
 }
 
@@ -184,8 +218,11 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 .profile-bio { margin-top: 20px; }
 
 .profile-meta {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
   margin-top: 15px;
   font-size: 15px;
   color: var(--dark-gray);
@@ -194,6 +231,8 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 .profile-meta > div { margin-right: 15px; }
 
 .profile-stats {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   margin-top: 15px;
 }
@@ -232,7 +271,6 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   word-wrap: break-word;
 
 }
-
 /** BUTTONS **/
 
 .tweet-button:hover, .reply-button:hover { background-color: var(--blue); }
@@ -243,9 +281,15 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 }
 
 .tweet-actions, .comments-section {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 
 .like-button, .comment-button, .back-button {
@@ -257,8 +301,12 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   padding: 0;
   margin-right: 20px;
   cursor: pointer;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 
 .back-button { margin-bottom: var(--margin-m); }
@@ -309,6 +357,8 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   font-size: 15px;
   font-weight: bold;
   cursor: pointer;
+  -webkit-transition: background-color 0.2s, color 0.2s;
+  -o-transition: background-color 0.2s, color 0.2s;
   transition: background-color 0.2s, color 0.2s;
   outline: none;
 }
@@ -326,9 +376,15 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
 }
 
 .content-header, .follow-card{
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 
 .joined-date {
@@ -360,6 +416,5 @@ body { font: 300 16px/1.5 "Open Sans", sans-serif; }
   font-size: 16px;
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: Arial, sans-serif;
   line-height: 1.6;
 }

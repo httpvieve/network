@@ -14,7 +14,7 @@ from .models import *
 MAX_POSTS = 10
 
 def index(request):
-    
+
     return render(request, "network/index.html")
 
 def login_view(request):
@@ -27,7 +27,7 @@ def login_view(request):
 
         # Check if authentication successful
         if user is not None:
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')  # Add backend here
             return HttpResponseRedirect(reverse("index"))
         else:
             return render(request, "network/login.html", {
@@ -68,17 +68,17 @@ def register(request):
             return render(request, "network/register.html", {
                 "message": "Username already taken."
             })
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
 
 @login_required
 def comment(request, post_id):
-    
+
     post = Post.objects.get(pk=post_id)
     comments = post.comments.order_by('-created_at')
-    
+
     if request.method == "POST":
         data = json.loads(request.body)
         comment = Comment(
@@ -90,11 +90,11 @@ def comment(request, post_id):
         return JsonResponse({"message": "Comment added successfully.", "comment": comment.serialize()}, status=201)
     elif request.method == "GET":
         return JsonResponse({"comments": [comment.serialize() for comment in comments]}, safe=False)
-    else: 
+    else:
         return JsonResponse({"error": "Invalid request."}, status=400)
 
 @csrf_exempt
-@login_required 
+@login_required
 def create_post(request):
     if request.method == 'POST':
         content = request.POST.get('content')
@@ -104,7 +104,7 @@ def create_post(request):
             post = Post(
                 author=request.user,
                 content=content,
-                media=image if image else None  
+                media=image if image else None
             )
             post.save()
 
@@ -115,11 +115,11 @@ def create_post(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @csrf_exempt
-@login_required 
+@login_required
 def like_post (request, post_id):
-    
+
     post = Post.objects.get (pk=post_id)
-    
+
     if request.method == "PUT":
         # if liked -> unlike
         if request.user in post.liked_by.all():
@@ -131,14 +131,14 @@ def like_post (request, post_id):
             'likes_count': post.liked_by.count(),
             'is_liked': request.user in post.liked_by.all()
         })
-        
+
     return JsonResponse ({'success': False})
 
 
 @csrf_exempt
-@login_required 
+@login_required
 def content(request, post_id):
-    
+
     post = Post.objects.get(id=post_id)
     comments = post.comments.order_by('-created_at')
     if request.method == "GET":
@@ -151,7 +151,7 @@ def content(request, post_id):
                 'is_following': request.user in post.author.followers.all(),
                 'comments_count': comments.count()
             })
-        
+
     if request.method == "PUT":
 
         data = json.loads(request.body)
@@ -163,7 +163,7 @@ def content(request, post_id):
         })
 
     if request.method == "POST":
-        
+
         data = json.loads(request.body)
         comment = Comment(
             post = post,
@@ -174,19 +174,19 @@ def content(request, post_id):
         return JsonResponse({"message": "Comment added successfully.", "comment": comment.serialize()}, status=201)
 
 def filter (request, scope, page):
-    
+
     if scope == "all":
         entries = Post.objects.all()
     elif scope == "following":
         entries = Post.objects.filter(author__in=request.user.following.all())
-    else: 
-        entries = Post.objects.filter(author = User.objects.get(username = scope))  
-        
+    else:
+        entries = Post.objects.filter(author = User.objects.get(username = scope))
+
     posts, has_next, has_previous = paginate (entries, page)
     return posts, has_next, has_previous
 
 def posts(request, scope, page):
-    
+
     posts, has_next, has_previous = filter (request, scope, page)
     return JsonResponse  ({
             'posts': [entry.serialize(request.user) for entry in posts],
@@ -196,25 +196,25 @@ def posts(request, scope, page):
         })
 
 def paginate (posts, index):
-    
+
     posts = posts.order_by('-created_at').all()
     paginator = Paginator (posts, MAX_POSTS)
     current = paginator.page(index)
     entries = current.object_list
     has_next, has_previous = current.has_next(), current.has_previous()
-    
+
     return entries, has_next, has_previous
 
 
 @csrf_exempt
-@login_required 
+@login_required
 def profile (request, username, page):
     user = User.objects.get(username = username)
     profile = UserProfile.objects.get(user = user)
 
-    if request.method == "GET":         
+    if request.method == "GET":
         posts, has_next, has_previous = filter (request, username, page)
-        
+
         return JsonResponse ({'following': user.following.count(),
                             'followers': user.followers.count(),
                             'current_following': [profile.serialize() for profile in request.user.following.all()],
@@ -225,29 +225,29 @@ def profile (request, username, page):
                             'can_edit': user == request.user,
                             'has_bio': profile.bio != None,
                             'is_following': request.user in user.followers.all(),
-                            'posts': [entry.serialize(request.user) for entry in posts], 
+                            'posts': [entry.serialize(request.user) for entry in posts],
                             'page_number': page, 'has_next': has_next, 'has_previous': has_previous})
-    
+
     if request.method == "POST":
         profile.bio = request.POST.get('bio', profile.bio)
         if 'profile_picture' in request.FILES:
             user.profile_picture = request.FILES['profile_picture']
             user.save()
         profile.save()
-        
+
         return JsonResponse({
             'success': True,
             'profile': profile.serialize(),
         })
-        
+
 @csrf_exempt
-@login_required 
+@login_required
 def follow_user (request, username):
-    
+
     profile = User.objects.get (username = username)
     is_followed = profile in request.user.following.all()
     is_follower = request.user in profile.followers.all()
-    
+
     if request.method == "PUT":
         if is_followed and is_follower:
             profile.followers.remove(request.user)

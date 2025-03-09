@@ -10,17 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
-import os
+from pathlib import Path
 
-from environ import Env  #!/usr/bin/env python
 
-env = Env()
-Env.read_env()
-
-ENVIRONMENT = env("ENVIRONMENT", default="production")
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
@@ -28,23 +22,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = "13kl@xtukpwe&xj2xoysxe9_6=tf@f8ewxer5n&ifnd46+6$%8"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-if ENVIRONMENT == "development":
-    DEBUG = True
-else:
-    DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    'localhost',
-    'localhost:8000',
-    'chime.up.railway.app',
-    '127.0.0.1'
-]
-
-CSRF_TRUSTED_ORIGINS = ['https://chime.up.railway.app']
+ALLOWED_HOSTS = ["*"]
+INTERNAL_IPS = ["127.0.0.1", "localhost:8000"]
 # Application definition
 
 INSTALLED_APPS = [
@@ -55,14 +40,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "admin_honeypot",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.twitter",
 ]
 
 TAILWIND_APP_NAME = "theme"
-INTERNAL_IPS = {
-    "127.0.0.1",
-    'localhost',
-    'localhost:8000'
-}
+INTERNAL_IPS = {"127.0.0.1", "localhost", "localhost:8000"}
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -71,6 +57,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "project4.urls"
@@ -86,11 +74,18 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.request",
             ],
         },
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by email
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
 WSGI_APPLICATION = "project4.wsgi.application"
 
 
@@ -100,7 +95,7 @@ WSGI_APPLICATION = "project4.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -124,6 +119,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SITE_ID = 1
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -142,8 +139,11 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+STATIC_ROOT = BASE_DIR.parent / "network" / "staticfiles"
 MEDIA_URL = "/media/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "network/media")
+MEDIA_ROOT = BASE_DIR.parent / "network" / "media"
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "network/static"),)
+STATICFILES_DIRS = [
+    BASE_DIR.parent / "network" / "static",
+]

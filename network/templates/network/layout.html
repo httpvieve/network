@@ -3,10 +3,9 @@
 <html lang="en">
     <head>
         <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
-        <script src="https://cdn.tailwindcss.com"></script>
 <link rel="icon" href="{% static 'network/wave.png' %}">
         <title>{% block title %} Chime In!{% endblock %}</title>
-        <link href="{% static 'network/styles.css' %}" rel="stylesheet">
+        <link href="{% if debug %}{% static 'network/output.css' %}{% else %}{% static 'network/output.min.css' %}{% endif %}" rel="stylesheet">
     </head>
     <body>
         {% if not user.is_authenticated %}
